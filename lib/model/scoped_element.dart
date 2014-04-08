@@ -41,7 +41,7 @@ abstract class ScopedElement extends PropelXmlElement {
 	 * Sets up the Rule object based on the attributes that were passed to loadFromXML().
 	 * @see       parent::loadFromXML()
 	 */
-	void setupObject() {
+	void _setupObject() {
 		setPackage(getAttribute("package", _pkg));
 		setSchema(getAttribute("schema", _schema));
 		setNamespace(getAttribute("namespace", _namespace));

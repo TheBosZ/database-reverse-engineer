@@ -6,12 +6,12 @@ abstract class PropelXmlElement extends XmlElement {
 
 	PropelXmlElement(String name) : super(name);
 
-	void setupObject();
+	void _setupObject();
 
 	void loadFromXML(Map<String, String> other) {
 		this.attributes.clear();
 		this.attributes.addAll(other);
-		setupObject();
+		_setupObject();
 	}
 
 	Map<String, String> getAttributes() {

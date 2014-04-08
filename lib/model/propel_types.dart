@@ -9,12 +9,6 @@ part of database_reverse_engineer;
  */
 class PropelTypes {
 
-	static const int PARAM_BOOL = 5;
-	static const int PARAM_NULL = 0;
-	static const int PARAM_INT = 1;
-	static const int PARAM_STR = 2;
-	static const int PARAM_LOB = 3;
-
 	static const String CHAR = "CHAR";
 	static const String VARCHAR = "VARCHAR";
 	static const String LONGVARCHAR = "LONGVARCHAR";
@@ -167,39 +161,39 @@ class PropelTypes {
 	 * @var        array
 	 */
 	static final Map<String, String> propelTypeToDDOTypeMap = {
-		PropelTypes.CHAR: PropelTypes.PARAM_STR,
-		PropelTypes.VARCHAR: PropelTypes.PARAM_STR,
-		PropelTypes.LONGVARCHAR: PropelTypes.PARAM_STR,
-		PropelTypes.CLOB: PropelTypes.PARAM_STR,
-		PropelTypes.CLOB_EMU: PropelTypes.PARAM_STR,
-		PropelTypes.NUMERIC: PropelTypes.PARAM_INT,
-		PropelTypes.DECIMAL: PropelTypes.PARAM_STR,
-		PropelTypes.TINYINT: PropelTypes.PARAM_INT,
-		PropelTypes.SMALLINT: PropelTypes.PARAM_INT,
-		PropelTypes.INTEGER: PropelTypes.PARAM_INT,
-		PropelTypes.INTEGER_TIMESTAMP: PropelTypes.PARAM_INT,
-		PropelTypes.BIGINT: PropelTypes.PARAM_INT,
-		PropelTypes.REAL: PropelTypes.PARAM_STR,
-		PropelTypes.FLOAT: PropelTypes.PARAM_STR,
-		PropelTypes.DOUBLE: PropelTypes.PARAM_STR,
-		PropelTypes.BINARY: PropelTypes.PARAM_STR,
-		PropelTypes.VARBINARY: PropelTypes.PARAM_LOB,
-		PropelTypes.LONGVARBINARY: PropelTypes.PARAM_LOB,
-		PropelTypes.BLOB: PropelTypes.PARAM_LOB,
-		PropelTypes.DATE: PropelTypes.PARAM_STR,
-		PropelTypes.TIME: PropelTypes.PARAM_STR,
-		PropelTypes.TIMESTAMP: PropelTypes.PARAM_STR,
-		PropelTypes.BOOLEAN: PropelTypes.PARAM_BOOL,
-		PropelTypes.BOOLEAN_EMU: PropelTypes.PARAM_INT,
-		PropelTypes.OBJECT: PropelTypes.PARAM_STR,
-		PropelTypes.DART_ARRAY: PropelTypes.PARAM_STR,
-		PropelTypes.ENUM: PropelTypes.PARAM_INT,
+		PropelTypes.CHAR: DDO.PARAM_STR,
+		PropelTypes.VARCHAR: DDO.PARAM_STR,
+		PropelTypes.LONGVARCHAR: DDO.PARAM_STR,
+		PropelTypes.CLOB: DDO.PARAM_STR,
+		PropelTypes.CLOB_EMU: DDO.PARAM_STR,
+		PropelTypes.NUMERIC: DDO.PARAM_INT,
+		PropelTypes.DECIMAL: DDO.PARAM_STR,
+		PropelTypes.TINYINT: DDO.PARAM_INT,
+		PropelTypes.SMALLINT: DDO.PARAM_INT,
+		PropelTypes.INTEGER: DDO.PARAM_INT,
+		PropelTypes.INTEGER_TIMESTAMP: DDO.PARAM_INT,
+		PropelTypes.BIGINT: DDO.PARAM_INT,
+		PropelTypes.REAL: DDO.PARAM_STR,
+		PropelTypes.FLOAT: DDO.PARAM_STR,
+		PropelTypes.DOUBLE: DDO.PARAM_STR,
+		PropelTypes.BINARY: DDO.PARAM_STR,
+		PropelTypes.VARBINARY: DDO.PARAM_LOB,
+		PropelTypes.LONGVARBINARY: DDO.PARAM_LOB,
+		PropelTypes.BLOB: DDO.PARAM_LOB,
+		PropelTypes.DATE: DDO.PARAM_STR,
+		PropelTypes.TIME: DDO.PARAM_STR,
+		PropelTypes.TIMESTAMP: DDO.PARAM_STR,
+		PropelTypes.BOOLEAN: DDO.PARAM_BOOL,
+		PropelTypes.BOOLEAN_EMU: DDO.PARAM_INT,
+		PropelTypes.OBJECT: DDO.PARAM_STR,
+		PropelTypes.DART_ARRAY: DDO.PARAM_STR,
+		PropelTypes.ENUM: DDO.PARAM_INT,
 
 		// These are pre-epoch dates, which we need to map to String type
 		// since they cannot be properly handled using strtotime() -- or even numeric
 		// timestamps on Windows.
-		PropelTypes.BU_DATE: PropelTypes.PARAM_STR,
-		PropelTypes.BU_TIMESTAMP: PropelTypes.PARAM_STR,
+		PropelTypes.BU_DATE: DDO.PARAM_STR,
+		PropelTypes.BU_TIMESTAMP: DDO.PARAM_STR,
 	};
 
 	/**

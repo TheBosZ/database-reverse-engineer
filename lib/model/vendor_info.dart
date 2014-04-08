@@ -7,7 +7,7 @@ class VendorInfo extends PropelXmlElement {
 
 	VendorInfo([String this._type = null]) : super('VendorInfo');
 
-	void setupObject() {
+	void _setupObject() {
 		_type = attributes['type'];
 	}
 
