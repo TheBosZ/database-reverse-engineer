@@ -1,0 +1,4 @@
+name: database_reverse_engineer
+description: A pub package
+dependencies:
+  xml: any
