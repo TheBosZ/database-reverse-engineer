@@ -38,7 +38,7 @@ class Column extends PropelXmlElement {
 	String _inheritanceType;
 	String _isInheritance;
 	String _isEnumeratedClasses;
-	String _inheritanceList;
+	List<Inheritance> _inheritanceList;
 	String _needsTransactionInPostgres;
 
 	List<String> _valueset = new List<String>();

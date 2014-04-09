@@ -18,6 +18,18 @@ part './model/database.dart';
 part './model/app_data.dart';
 part './model/validator.dart';
 part './model/foreign_key.dart';
+part './model/index.dart';
+part './model/unique.dart';
+part './model/name_factory.dart';
+part './model/dart_name_generator.dart';
+part './model/constraint_name_generator.dart';
+part './model/inheritance.dart';
+part './model/id_method_parameter.dart';
+
 part './reverse/schema_parser.dart';
 part './reverse/base_schema_parser.dart';
 part './reverse/mysql/mysql_schema_parser.dart';
+
+part './platform/propel_platform_interface.dart';
+part './platform/default_platform.dart';
+part './platform/mysql_platform.dart';

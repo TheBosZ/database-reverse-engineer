@@ -1,7 +1,7 @@
 part of database_reverse_engineer;
 
 class Validator extends PropelXmlElement {
-	Validator(String name): super(name);
+	Validator(): super('validator');
 
 	static const String TRANSLATE_NONE = "none";
 	static const String TRANSLATE_GETTEXT = "gettext";

@@ -1,8 +1,8 @@
 part of database_reverse_engineer;
 
-class ForeignKey extends PropelXmlElement {
-	ForeignKey([String this._name]): super('foreign-key');
-	String _name;
+class IdMethodParameter extends PropelXmlElement {
+	IdMethodParameter(): super('id-method-parameter');
+
 
 	@override
 	void _setupObject() {

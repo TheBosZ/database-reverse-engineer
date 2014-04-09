@@ -3,7 +3,7 @@ part of database_reverse_engineer;
 class Database extends ScopedElement {
 	Database(String this._name): super('table');
 
-	String _platform;
+	PropelPlatformInterface _platform;
 	List<Table> _tableList = new List<Table>();
 	String _curColumn;
 	String _name;
@@ -39,9 +39,9 @@ class Database extends ScopedElement {
 		_defaultStringFormat = getAttribute('defaultStringFormat', 'YAML');
 	}
 
-	String getPlatform() => _platform;
+	PropelPlatformInterface getPlatform() => _platform;
 
-	void setPlatform(String platform) {
+	void setPlatform(PropelPlatformInterface platform) {
 		_platform = platform;
 	}
 

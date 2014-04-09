@@ -35,7 +35,7 @@ abstract class NameGenerator {
 	 *
 	 * @see        PhpNameGenerator::phpnameMethod()
 	 */
-	static const String CONV_METHOD_PHPNAME = "phpname";
+	static const String CONV_METHOD_DARTNAME = "phpname";
 
 	/**
 	 * Specifies no modification when converting from a schema column
@@ -51,5 +51,9 @@ abstract class NameGenerator {
 	 * @return     The generated name.
 	 * @throws     EngineException
 	 */
-	String generateName($inputs);
+	String generateName(List<String> inputs);
+
+	static String ucFirst(String name) {
+		return "${name.substring(0, 1).toUpperCase()}${name.substring(1)}";
+	}
 }
