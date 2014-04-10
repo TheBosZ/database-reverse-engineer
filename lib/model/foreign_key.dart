@@ -28,7 +28,7 @@ class ForeignKey extends PropelXmlElement {
 		_foreignTableCommonName = "${getTable().getDatabase().getTablePrefix()}${getAttribute('foreignTable')}";
 		_foreignSchemaName = getAttribute('foreignSchema');
 		if(_foreignSchemaName == null) {
-			if(getTable().getSchema()) {
+			if(getTable().getSchema() != null) {
 				_foreignSchemaName = getTable().getSchema();
 			}
 		}

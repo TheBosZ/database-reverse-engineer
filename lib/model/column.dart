@@ -47,7 +47,7 @@ class Column extends PropelXmlElement {
 
 	Domain _domain;
 
-	Column(String this._name): super('column');
+	Column([String this._name]): super('column');
 
 	@override
 	void _setupObject() {
@@ -128,10 +128,10 @@ class Column extends PropelXmlElement {
 		if (getAttribute('size') == null && getDomain().getType() == 'VARCHAR' && getAttribute('sqlType') == null) {
 			size = 255;
 		} else {
-			size = getAttribute('size');
+			size = int.parse(getAttribute('size'));
 		}
 		getDomain().replaceSize(size);
-		getDomain().replaceScale(getAttribute('scale'));
+		getDomain().replaceScale(int.parse(getAttribute('scale')));
 
 		String defValue = getAttribute('defaultValue', getAttribute('default'));
 		if (defValue != null && defValue.toLowerCase() != 'null') {

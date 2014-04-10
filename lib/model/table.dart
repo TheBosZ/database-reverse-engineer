@@ -124,7 +124,7 @@ class Table extends ScopedElement implements IDMethod {
 
 	void doFinalInitialization() {
 		if (_heavyIndexing) {
-			doHeavyIndexing();
+			_doHeavyIndexing();
 		}
 
 		doNaming();
@@ -154,10 +154,10 @@ class Table extends ScopedElement implements IDMethod {
 	}
 
 	void addExtraIndicies() {
-		List<Object> indicies = collectIndexedColumns('PRIMARY', getPrimaryKey());
+		Map<String, Index> indicies = collectIndexedColumns('PRIMARY', getPrimaryKey());
 
 		List<Index> tableIndicies = new List<Index>();
-		tableIndicies.addAll(getIndicies());
+		tableIndicies.addAll(getIndices());
 		tableIndicies.addAll(getUnices());
 
 		tableIndicies.forEach((Index i) {
@@ -195,7 +195,8 @@ class Table extends ScopedElement implements IDMethod {
 		});
 	}
 
-	Map<String, Index> collectIndexedColumns(Index idx, List<Column> columns) {
+	Map<String, Index> collectIndexedColumns(String indexName, List<Column> columns) {
+		Index idx = getIndices().where((Index i) => i.getName() == indexName).first;
 		Map<String, Index> idxList = new Map<String, Index>();
 		List<Column> idxCols = new List<Column>();
 		columns.forEach((Column c) {
@@ -261,7 +262,7 @@ class Table extends ScopedElement implements IDMethod {
 	String acquireConstraintName(String nameType, int nbr) {
 		List<Object> inputs = new List<Object>();
 		inputs.add(getDatabase());
-		inputs.add(getCommonname());
+		inputs.add(getCommonName());
 		inputs.add(nameType);
 		inputs.add(nbr);
 		return NameFactory.generateName(NameFactory.CONSTRAINT_GENERATOR, inputs);
@@ -332,7 +333,7 @@ class Table extends ScopedElement implements IDMethod {
 		}
 		_columnList.remove(col);
 		_columnsByName.remove(col.getName());
-		_columnsByLowercaseName.remove(col.getName.toLowerCase());
+		_columnsByLowercaseName.remove(col.getName().toLowerCase());
 		_columnsByDartName.remove(col.getDartName());
 		adjustColumnPositions();
 	}
@@ -396,7 +397,7 @@ class Table extends ScopedElement implements IDMethod {
 		List<Inheritance> children = _inheritanceColumn.getChildren();
 		List<String> names = new List<String>();
 		for (int x = 0; x < children.length; ++x) {
-			names.add(children.elementAt(x).getName());
+			names.add(children.elementAt(x).runtimeType.toString());
 		}
 		return names;
 	}
@@ -411,42 +412,42 @@ class Table extends ScopedElement implements IDMethod {
 	List<ForeignKey> getReferrers() => _referrers;
 
 	void setupReferrers([bool throwErrors = false]) {
-		getForeignKeys().forEach((ForeignKey fk){
+		getForeignKeys().forEach((ForeignKey fk) {
 			Table foreignTable = getDatabase().getTable(fk.getForeignTableName());
-			if(foreignTable != null) {
+			if (foreignTable != null) {
 				List<ForeignKey> referrers = getReferrers();
-				if(referrers == null || !referrers.contains(fk)) {
+				if (referrers == null || !referrers.contains(fk)) {
 					foreignTable.addRefferer(fk);
 				}
-			} else if(throwErrors) {
-				throw new Exception('Table "${getname()}" contains a foreign key to nonexistent table "${fk.getForeignTableName()}"');
+			} else if (throwErrors) {
+				throw new Exception('Table "${getName()}" contains a foreign key to nonexistent table "${fk.getForeignTableName()}"');
 			}
-			fk.getLocalColumns().forEach((String colname){
+			fk.getLocalColumns().forEach((String colname) {
 				Column col = getColumn(colname);
-				if(col != null) {
-					if(col.isPrimaryKey() && !getContainsForeignPK()) {
+				if (col != null) {
+					if (col.isPrimaryKey() && !getContainsForeignPK()) {
 						setContainsForeignPK(true);
 					}
-				} else if(throwErrors) {
+				} else if (throwErrors) {
 					throw new Exception('Table "${getName()}" contains a foreign key with nonexistent local column "${colname}"');
 				}
 			});
 
-			getForeignColumns().forEach((String colName){
-				if(foreignTable == null) {
+			fk.getForeignColumns().forEach((String colName) {
+				if (foreignTable == null) {
 					return;
 				}
 				Column foreignCol = foreignTable.getColumn(colName);
-				if(foreignCol != null) {
-					if(!foreignCol.hashReferrer(fk)) {
+				if (foreignCol != null) {
+					if (!foreignCol.hasReferrer(fk)) {
 						foreignCol.addReferrer(fk);
 					}
-				} else if(throwErrors) {
+				} else if (throwErrors) {
 					throw new Exception('Table "${getName()}" contains a foreign key to table "${foreignTable.getName()}" with nonexistant column "${colName}"');
 				}
 			});
 
-			if(getDatabase().getPlatform() is MysqlPlatform) {
+			if (getDatabase().getPlatform() is MysqlPlatform) {
 				addExtraIndicies();
 			}
 
@@ -455,9 +456,9 @@ class Table extends ScopedElement implements IDMethod {
 
 	List<List<ForeignKey>> getCrossPks() {
 		List<List<ForeignKey>> crossfks = new List<List<ForeignKey>>();
-		getReferrers().forEach((ForeignKey fk){
-			if(fk.getTable().getIsCrossRef()) {
-				fk.getOtherFKs().forEach((ForeignKey crossFk){
+		getReferrers().forEach((ForeignKey fk) {
+			if (fk.getTable().getIsCrossRef()) {
+				fk.getOtherFKs().forEach((ForeignKey crossFk) {
 					crossfks.add([fk, crossFk]);
 				});
 			}
@@ -472,7 +473,7 @@ class Table extends ScopedElement implements IDMethod {
 	bool getContainsForeignPK() => _containsForeignPK;
 
 	List<String> getForeignTableNames() {
-		if(_foreignTableNames == null) {
+		if (_foreignTableNames == null) {
 			_foreignTableNames = new List<String>();
 		}
 		return _foreignTableNames;
@@ -481,9 +482,9 @@ class Table extends ScopedElement implements IDMethod {
 	bool requiresTransactionInPostgres() => _needsTransactionInPostgres;
 
 	IdMethodParameter addIdMethodParameter(Object data) {
-		if(data is IdMethodParameter) {
+		if (data is IdMethodParameter) {
 			data.setTable(this);
-			if(_idMethodParameters == null) {
+			if (_idMethodParameters == null) {
 				_idMethodParameters = new List<IdMethodParameter>();
 			}
 			_idMethodParameters.add(data);
@@ -495,7 +496,7 @@ class Table extends ScopedElement implements IDMethod {
 	}
 
 	Index addIndex(Object data) {
-		if(data is Index)  {
+		if (data is Index) {
 			data.setTable(this);
 			String name = data.getName();
 			_indicies[name] = data;
@@ -508,7 +509,7 @@ class Table extends ScopedElement implements IDMethod {
 	}
 
 	Unique addUnique(Object data) {
-		if(data is Unique) {
+		if (data is Unique) {
 			data.setTable(this);
 			data.getName();
 			_unices.add(data);
@@ -546,10 +547,7 @@ class Table extends ScopedElement implements IDMethod {
 	}
 
 	String getName() {
-		if(_schema != null &&
-			getDatabase() != null &&
-			getDatabase().getPlatform() != null &&
-			getDatabase().getPlatform().supportsSchemas()) {
+		if (_schema != null && getDatabase() != null && getDatabase().getPlatform() != null && getDatabase().getPlatform().supportsSchemas()) {
 			return "${_schema}.${_commonName}";
 		}
 		return _commonName;
@@ -564,9 +562,9 @@ class Table extends ScopedElement implements IDMethod {
 	}
 
 	String getDartName() {
-		if(_dartName == null) {
+		if (_dartName == null) {
 			List<Object> inputs = new List<Object>();
-			inputs.add(getStdSeparatedName());
+			inputs.add(_getStdSeparatedName());
 			inputs.add(_dartNamingMethod);
 			_dartName = NameFactory.generateName(NameFactory.DART_GENERATOR, inputs);
 		}
@@ -583,7 +581,7 @@ class Table extends ScopedElement implements IDMethod {
 
 	String getStudlyDartName() {
 		String name = getDartName();
-		if(name.length > 1) {
+		if (name.length > 1) {
 			return "${name.substring(0,1).toLowerCase()}${name.substring(1)}";
 		}
 		return name.toLowerCase();
@@ -600,15 +598,14 @@ class Table extends ScopedElement implements IDMethod {
 	}
 
 	String getDefaultStringFormat() {
-		if(_defaultStringFormat == null && getDatabase() &&
-			getDatabase().getDefaultStringFormat()) {
+		if (_defaultStringFormat == null && getDatabase() && getDatabase().getDefaultStringFormat()) {
 			return getDatabase().getDefaultStringFormat();
 		}
 		return _defaultStringFormat;
 	}
 
 	String getIdMethod() {
-		if(_idMethod == null) {
+		if (_idMethod == null) {
 			return IDMethod.NO_ID_METHOD;
 		}
 		return _idMethod;
@@ -656,8 +653,8 @@ class Table extends ScopedElement implements IDMethod {
 
 	int getNumLazyLoadColumns() {
 		int c = 0;
-		_columnList.forEach((Column col){
-			if(col.isLazyLoad()) {
+		_columnList.forEach((Column col) {
+			if (col.isLazyLoad()) {
 				++c;
 			}
 		});
@@ -666,8 +663,8 @@ class Table extends ScopedElement implements IDMethod {
 
 	bool hasEnumColumns() {
 		bool result = false;
-		getColumns().forEach((Column col){
-			if(col.isEnumType()) {
+		getColumns().forEach((Column col) {
+			if (col.isEnumType()) {
 				result = true;
 			}
 		});
@@ -684,6 +681,161 @@ class Table extends ScopedElement implements IDMethod {
 
 	List<Unique> getUnices() => _unices;
 
+	bool hasColumn(Object col, [bool caseInsensitive = false]) {
+		String name;
+		if (col is Column) {
+			name = col.getName();
+		} else {
+			name = col.toString();
+		}
+		if (caseInsensitive) {
+			return _columnsByLowercaseName.containsKey(name.toLowerCase());
+		}
+		return _columnsByName.containsKey(name);
+	}
+
+	Column getColumn(String name, [bool caseInsensitive = false]) {
+		if (hasColumn(name, caseInsensitive)) {
+			if (caseInsensitive) {
+				return _columnsByLowercaseName[name.toLowerCase()];
+			} else {
+				return _columnsByName[name];
+			}
+		}
+		return null;
+	}
+
+	Column getColumnByDartName(String name) {
+		if (_columnsByDartName.containsKey(name)) {
+			return _columnsByDartName[name];
+		}
+		return null;
+	}
+
+
+
+	List<ForeignKey> getForeignKeysReferencingTable(String tableName) {
+		return getForeignKeys().where((ForeignKey fk) => fk.getForeignTableName() == tableName);
+	}
+
+	List<ForeignKey> getColumnForeignKeys(String colName) {
+		return getForeignKeys().where((ForeignKey fk) => fk.getLocalColumns().contains(colName));
+	}
+
+	Database getDatabase() => _database;
+
+	void setDatabase(Database db) {
+		_database = db;
+	}
+
+	bool isForReferenceOnly() => _forReferenceOnly;
+
+	void setForReferenceOnly(bool v) {
+		_forReferenceOnly = v;
+	}
+
+	String treeMode() => _treeMode;
+
+	void setTreeMode(String v) {
+		_treeMode = v;
+	}
+
+	@override
+	void appendXml(XmlElement node) {
+		XmlElement child = new XmlElement('table');
+
+		child.attributes['name'] = getCommonName();
+
+		if (getSchema() != null) {
+			child.attributes['schema'] = getSchema();
+		}
+
+		if (_dartName != null) {
+			child.attributes['dartName'] = _dartName;
+		}
+
+		if (_idMethod != null) {
+			child.attributes['idMethod'] = _idMethod;
+		}
+
+		if (_skipSql != null) {
+			child.attributes['skipSql'] = _skipSql.toString();
+		}
+
+		if (_readOnly != null) {
+			child.attributes['readOnly'] = _readOnly.toString();
+		}
+
+		if (_treeMode != null) {
+			child.attributes['treeMode'] = _treeMode;
+		}
+
+		if (_reloadOnInsert != null) {
+			child.attributes['reloadOnInsert'] = _reloadOnInsert.toString();
+		}
+
+		if (_reloadOnUpdate != null) {
+			child.attributes['reloadOnUpdate'] = _reloadOnUpdate.toString();
+		}
+
+		if (_forReferenceOnly != null) {
+			child.attributes['forReferenceOnly'] = _forReferenceOnly.toString();
+		}
+
+		if (_abstractValue != null) {
+			child.attributes['abstract'] = _abstractValue.toString();
+		}
+
+		if (_interface != null) {
+			child.attributes['interface'] = _interface;
+		}
+
+		if (_description != null) {
+			child.attributes['description'] = _description;
+		}
+
+		if (_baseClass != null) {
+			child.attributes['baseClass'] = _baseClass;
+		}
+
+		if (_basePeer != null) {
+			child.attributes['basePeer'] = _basePeer;
+		}
+
+		if (getIsCrossRef()) {
+			child.attributes['isCrossRef'] = getIsCrossRef().toString();
+		}
+
+		_columnList.forEach((Column c) {
+			c.appendXml(child);
+		});
+
+		_validatorList.forEach((Validator v) {
+			v.appendXml(child);
+		});
+
+		_foreignKeys.forEach((ForeignKey fk) {
+			fk.appendXml(child);
+		});
+
+		_idMethodParameters.forEach((IdMethodParameter p) {
+			p.appendXml(child);
+		});
+
+		_indicies.forEach((String k, Index v) {
+			v.appendXml(child);
+		});
+
+		_unices.forEach((Unique u) {
+			u.appendXml(child);
+		});
+
+		_vendorInfos.forEach((String k, VendorInfo vi) {
+			vi.appendXml(child);
+		});
+		node.addChild(child);
+	}
+
 	List<Column> getPrimaryKey() {
 		List<Column> pks = new List<Column>();
 		_columnList.forEach((Column c) {
@@ -694,49 +846,26 @@ class Table extends ScopedElement implements IDMethod {
 		return pks;
 	}
 
-	bool hasColumn(Object col, [bool caseInsensitive = false]) {
-		String name;
-		if(col is Column) {
-			name = col.getName();
-		} else {
-			name = col.toString();
+	bool hasPrimaryKey() => getPrimaryKey().length > 0;
+
+	bool hasCompositePrimaryKey() => getPrimaryKey().length > 1;
+
+	bool hasAutoIncrementPrimaryKey() => getAutoIncrementPrimaryKey() != null;
+
+	Column getAutoIncrementPrimaryKey() {
+		Column pk;
+		if(getIdMethod() != IDMethod.NO_ID_METHOD) {
+			pk = getPrimaryKey().where((Column c) => c.isAutoIncrement()).first;
 		}
-		if(caseInsensitive) {
-			return _columnsByLowercaseName.containsKey(name.toLowerCase());
-		}
-		return _columnsByName.containsKey(name);
+		return pk;
 	}
 
-	Column getColumn(String name, [bool caseInsensitive = false]){
-		if(hasColumn(name, caseInsensitive)) {
-			if(caseInsensitive) {
-				return _columnsByLowercaseName[name.toLowerCase()];
-			} else {
-				return _columnsByName[name];
-			}
-		}
-		return null;
+	bool getIsCrossRef() => _isCrossRef;
+
+	void setIsCrossRef(bool v) {
+		_isCrossRef = v;
 	}
 
-	Column getColumnByDartName(String name) {
-		if(_columnsByDartName.containsKey(name)) {
-			return _columnsByDartName[name];
-		}
-		return null;
-	}
 
-	Database getDatabase() => _database;
 
-	List<ForeignKey> getForeignKeysReferencingTable(String tableName) {
-		return getForeignKeys().where((ForeignKey fk) => fk.getForeignTableName() == tableName);
-	}
-
-	List<ForeignKey> getColumnForeignKeys(String colName) {
-		return getForeignKeys().where((ForeignKey fk) => fk.getLocalColumns().contains(colName));
-	}
-
-	@override
-	void appendXml(XmlElement node) {
-		// TODO: implement appendXml
-	}
 }

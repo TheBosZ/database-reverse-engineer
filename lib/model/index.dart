@@ -9,7 +9,7 @@ class Index extends PropelXmlElement {
 
 	Table _parentTable;
 
-	List<String> _indexColumns;
+	List<Column> _indexColumns;
 
 	Map<String, int> _indexColumnSizes = new Map<String, int>();
 
@@ -20,9 +20,9 @@ class Index extends PropelXmlElement {
 		inputs.add(t.getCommonName());
 		inputs.add(isUnique() ? 'U' : 'I');
 		if(isUnique()) {
-			inputs.add(table.getUnices().length + 1);
+			inputs.add(t.getUnices().length + 1);
 		} else {
-			inputs.add(table.getIndicies().length + 1);
+			inputs.add(t.getIndices().length + 1);
 		}
 
 		_indexName = NameFactory.generateName(NameFactory.CONSTRAINT_GENERATOR, inputs);
@@ -64,20 +64,19 @@ class Index extends PropelXmlElement {
 
 	void addColumn(Object data) {
 		if(data is Column) {
-			_indexColumns.add(data.getName());
+			_indexColumns.add(data);
 			if(data.getSize() != null && data.getSize() != 0) {
 				_indexColumnSizes[data.getName()] = data.getSize();
 			}
-		} else if(data is Map<String, String>) {
-			_indexColumns.add(data['name']);
-			if(data.containsKey('size')) {
-				_indexColumnSizes[data['name']] = int.parse(data['size']);
-			}
+		} else {
+			Column c = new Column();
+			c.loadFromXML(data);
+			addColumn(c);
 		}
 	}
 
 	void setColumns(List<Column> indexCols) {
-		_indexColumns = new List<String>();
+		_indexColumns = new List<Column>();
 		resetColumnSize();
 		indexCols.forEach((Column c){
 			addColumn(c);
@@ -103,8 +102,8 @@ class Index extends PropelXmlElement {
 		}
 
 		bool test = caseInsensitive ?
-			_indexColumns.elementAt(pos).toLowerCase() != name.toLowerCase()
-			: _indexColumns.elementAt(pos) != name;
+			_indexColumns.elementAt(pos).getName().toLowerCase() != name.toLowerCase()
+			: _indexColumns.elementAt(pos).getName() != name;
 		if(test) {
 			return false;
 		}
@@ -116,7 +115,7 @@ class Index extends PropelXmlElement {
 
 	bool hasColumns() => _indexColumns.isNotEmpty;
 
-	List<String> getColumns() => _indexColumns;
+	List<Column> getColumns() => _indexColumns;
 
 
 	@override
@@ -124,9 +123,9 @@ class Index extends PropelXmlElement {
 		XmlElement child = new XmlElement('index');
 		child.attributes['name'] = getName();
 
-		_indexColumns.forEach((String cname){
+		_indexColumns.forEach((Column c){
 			XmlElement colNode = new XmlElement('index-column');
-			colNode.attributes['name'] = cname;
+			colNode.attributes['name'] = c.getName();
 			child.addChild(colNode);
 		});
 

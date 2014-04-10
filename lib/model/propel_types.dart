@@ -309,7 +309,7 @@ class PropelTypes {
 	 * @param      string dartType The Dart type to check
 	 * @return     boolean Whether the Dart type is a primitive (string, int, boolean, float)
 	 */
-	static bool _isDartObjectType(String dartType) {
+	static bool isDartObjectType(String dartType) {
 		return (!PropelTypes.isDartPrimitiveType(dartType) && !["resource", "array"].contains(dartType));
 	}
 }

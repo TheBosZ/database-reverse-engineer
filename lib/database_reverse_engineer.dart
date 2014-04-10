@@ -4,6 +4,8 @@ import 'package:xml/xml.dart';
 import 'package:dart_ddo/ddo.dart';
 import 'dart:async';
 
+export 'package:xml/xml.dart';
+
 part 'model/propel_xml_element.dart';
 part 'model/vendor_info.dart';
 part 'model/id_method.dart';
