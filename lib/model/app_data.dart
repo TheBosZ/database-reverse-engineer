@@ -43,4 +43,42 @@ class AppData {
 		}
 		return _dbList;
 	}
+
+	bool hasMultipleDatabases() => _dbList.length > 1;
+
+	Database getDatabase([String name = null, bool doFinalInit = true]) {
+		if(doFinalInit) {
+			doFinalInitialization();
+		}
+
+		if(name == null) {
+			return _dbList.first;
+		}
+
+		return _dbList.where((Database db) => db.getName() == name).first;
+	}
+
+	bool hasDatabase(String name) => _dbList.where((Database db) => db.getName() == name).isNotEmpty;
+
+	Database addDatabase(Object data) {
+		if(data is Database) {
+			data.setAppData(this);
+			if(data.getPlatform() == null) {
+				GeneratorConfig gc = getGeneratorConfig();
+				PropelPlatformInterface pf;
+				if(gc != null) {
+					pf = gc.getGetConfiguredPlatform(null, data.getName());
+
+				}
+				data.setPlatform(pf != null ? pf : _platform);
+			}
+			_dbList.add(data);
+			return data;
+		}
+
+		Database db = new Database();
+		db.setAppData(this);
+		db.loadFromXML(data);
+		return addDatabase(db);
+	}
 }

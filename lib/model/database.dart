@@ -1,7 +1,7 @@
 part of database_reverse_engineer;
 
 class Database extends ScopedElement {
-	Database(String this._name): super('table');
+	Database([String this._name = null]): super('table');
 
 	PropelPlatformInterface _platform;
 	List<Table> _tableList = new List<Table>();
@@ -44,6 +44,8 @@ class Database extends ScopedElement {
 	void setPlatform(PropelPlatformInterface platform) {
 		_platform = platform;
 	}
+
+	String getName() => _name;
 
 	void setName(String name) {
 		_name = name;
