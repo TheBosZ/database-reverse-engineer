@@ -148,7 +148,7 @@ class Database extends ScopedElement {
 			_tablesByName[data.getName()] = data;
 			_tablesByLowercaseName[data.getName().toLowerCase()] = data;
 			String namespace;
-			if (data.getNamespace().contains(r'\\')) {
+			if (data.getNamespace() != null && data.getNamespace().contains(r'\\')) {
 				data.setNamespace(data.getNamespace().substring(1));
 			} else if ((namespace = getNamespace()) != null) {
 				if (data.getNamespace() == null) {

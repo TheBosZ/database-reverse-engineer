@@ -84,9 +84,9 @@ abstract class BaseSchemaParser implements SchemaParser {
 	}
 
 	PropelPlatformInterface getPlatform() {
-		if(_platform == null) {
-			_platform = getGeneratorConfig().getConfiguredPlatform();
-		}
+		//if(_platform == null) {
+			//_platform = getGeneratorConfig().getConfiguredPlatform();
+		//}
 		return _platform;
 	}
 }

@@ -231,7 +231,7 @@ class PropelTypes {
 	 * @return     array string[]
 	 */
 	static List<String> getPropelTypes() {
-		return PropelTypes.propelTypeToCreoleTypeMap.keys;
+		return PropelTypes.propelTypeToCreoleTypeMap.keys.toList();
 	}
 
 	/**

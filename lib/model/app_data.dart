@@ -64,12 +64,13 @@ class AppData {
 		if(data is Database) {
 			data.setAppData(this);
 			if(data.getPlatform() == null) {
-				GeneratorConfig gc = getGeneratorConfig();
 				PropelPlatformInterface pf;
-				if(gc != null) {
-					pf = gc.getGetConfiguredPlatform(null, data.getName());
+				//GeneratorConfig gc = getGeneratorConfig();
 
-				}
+				//if(gc != null) {
+					//pf = gc.getGetConfiguredPlatform(null, data.getName());
+
+				//}
 				data.setPlatform(pf != null ? pf : _platform);
 			}
 			_dbList.add(data);
@@ -81,4 +82,13 @@ class AppData {
 		db.loadFromXML(data);
 		return addDatabase(db);
 	}
+
+	void doFinalInitialization() {
+		if(!_isInitialized) {
+			_dbList.forEach((Database db) => db.doFinalInitialization());
+			_isInitialized = true;
+		}
+	}
+
+
 }

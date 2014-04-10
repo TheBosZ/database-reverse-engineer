@@ -2,10 +2,108 @@ part of database_reverse_engineer;
 
 class DefaultPlatform implements PropelPlatformInterface {
 
-	@override
-	String getAutoIncrement() {
-		// TODO: implement getAutoIncrement
+	Map<String, Domain> _schemaDomainMap;
+
+	DDO _con;
+
+	bool _isIdentifierQuotingEnabled = true;
+
+	//GeneratorConfig _generatorConfig;
+
+	DefaultPlatform([DDO this._con = null]) {
+		initialize();
 	}
+
+	void setConnection([DDO con = null]) {
+		_con = con;
+	}
+
+	@override
+	DDO getConnection() => _con;
+
+	/*void setGeneratorConfig(GeneratorConfig config) {
+
+	}*/
+
+	Object getBuildProperty(String name) {
+		//if(_generatorConfig != null) {
+		//return _generatorConfig.getBuildProperty(name);
+		//}
+		return null;
+	}
+
+	void initialize() {
+		_schemaDomainMap = new Map<String, Domain>();
+		PropelTypes.getPropelTypes().forEach((String t) {
+			_schemaDomainMap[t] = new Domain(t);
+		});
+
+		_schemaDomainMap[PropelTypes.BU_DATE] = new Domain(PropelTypes.DATE);
+		_schemaDomainMap[PropelTypes.BU_TIMESTAMP] = new Domain(PropelTypes.TIMESTAMP);
+
+		_schemaDomainMap[PropelTypes.BOOLEAN] = new Domain(PropelTypes.BOOLEAN, 'INTEGER');
+	}
+
+	void setSchemaDomainMapping(Domain domain) {
+		_schemaDomainMap[domain.getType()] = domain;
+	}
+
+	@override
+	String getDatabaseType() {
+		String cla = this.runtimeType.toString();
+		return cla.substring(0, cla.indexOf('Platform')).toLowerCase();
+	}
+
+
+
+	@override
+	int getMaxColumnNameLength() => 64;
+
+	@override
+	String getNativeIdMethod() => PropelPlatformInterface.IDENTITY;
+
+	@override
+	Domain getDomainForType(String propelType) {
+		if (!_schemaDomainMap.containsKey(propelType)) {
+			throw new Exception('Cannot map unknown Propel type "${propelType}" to native database type');
+		}
+		return _schemaDomainMap[propelType];
+	}
+
+	String getSequenceName(Table table) {
+    		throw new UnimplementedError('getSequenceName not implemented yet');
+    	}
+
+	String getAddTablesDDL(Database database) {
+		String ret = getBeginDDL();
+		database.getTablesForSql().forEach((Table t){
+			ret = "${ret}${getCommentBlockDDL(t.getName())}";
+			ret = "${ret}${getDropTableDDL(t)}";
+			ret = "${ret}${getAddTableDDL(t)}";
+			ret = "${ret}${getAddIndicesDDL(t)}";
+			ret = "${ret}${getAddForeignKeysDDL(t)}";
+		});
+		ret = "${ret}${getEndDDL()}";
+		return ret;
+	}
+
+	String getBeginDDL() => '';
+
+	String getEndDDL() => '';
+
+	String getDropTableDDL(Table table) => "\nDROP TABLE ${quoteIdentifier(table.getName())};\n";
+
+	@override
+	String getNullString(bool notNull) => notNull ? 'NOT NULL' : '';
+
+	@override
+	String getAutoIncrement() => 'IDENTITY';
+
+	String getCommentBlockDDL(String comment) => '''
+-----------------------------------------------------------------------
+-- ${comment}
+-----------------------------------------------------------------------
+''';
 
 	@override
 	String getBooleanString(Object tf) {
@@ -27,40 +125,20 @@ class DefaultPlatform implements PropelPlatformInterface {
 		// TODO: implement getColumnListDDL
 	}
 
-	@override
-	DDO getConnection() {
-		// TODO: implement getConnection
-	}
 
-	@override
-	String getDatabaseType() {
-		// TODO: implement getDatabaseType
-	}
 
 	@override
 	String getDateFormatter() {
 		// TODO: implement getDateFormatter
 	}
 
-	@override
-	Domain getDomainForType(String propelType) {
-		// TODO: implement getDomainForType
-	}
 
-	@override
-	int getMaxColumnNameLength() {
-		// TODO: implement getMaxColumnNameLength
-	}
 
-	@override
-	String getNativeIdMethod() {
-		// TODO: implement getNativeIdMethod
-	}
 
-	@override
-	String getNullString(bool notNull) {
-		// TODO: implement getNullString
-	}
+
+
+
+
 
 	@override
 	String getPrimaryKeyDDL(Table table) {
@@ -95,16 +173,6 @@ class DefaultPlatform implements PropelPlatformInterface {
 	@override
 	String quoteIdentifier(String text) {
 		// TODO: implement quoteIdentifier
-	}
-
-	@override
-	void setConnection([DDO conn = null]) {
-		// TODO: implement setConnection
-	}
-
-	@override
-	void setGeneratorConfig(Object config) {
-		// TODO: implement setGeneratorConfig
 	}
 
 	@override

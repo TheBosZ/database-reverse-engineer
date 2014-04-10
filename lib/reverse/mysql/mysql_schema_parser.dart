@@ -56,10 +56,10 @@ class MysqlSchemaParser extends BaseSchemaParser {
 	Future<int> parse(Database database, [Object task = null]) {
 		Completer c = new Completer();
 		_dbh.query('SHOW TABLES').then((DDOStatement stmt) {
-			List row;
+			DDOResult row;
 			List<Table> tables = new List<Table>();
 			while ((row = stmt.fetch(DDO.FETCH_NUM)) != null) {
-				String name = row[0];
+				String name = row.row.values.elementAt(0);
 				if (name == getMigrationTable()) {
 					continue;
 				}
@@ -68,15 +68,15 @@ class MysqlSchemaParser extends BaseSchemaParser {
 				tables.add(table);
 			}
 
-			tables.forEach((Table table){
+			tables.forEach((Table table) {
 				_addColumns(table);
 			});
 
-			tables.forEach((Table table){
+			tables.forEach((Table table) {
 				addForeignKeys(table);
 				addIndexes(table);
 				addPrimaryKey(table);
-				if(_addVendorInfo) {
+				if (_addVendorInfo) {
 					addTableVendorInfo(table);
 				}
 			});
@@ -89,10 +89,9 @@ class MysqlSchemaParser extends BaseSchemaParser {
 		String tableName = table.getName();
 		String databaseName = table.getDatabase().getName();
 
-		_dbh.query("SHOW COLUMNS FROM `${tableName}`")
-		.then((DDOStatement stmt) {
+		_dbh.query("SHOW COLUMNS FROM `${tableName}`").then((DDOStatement stmt) {
 			Map<String, String> row;
-			while((row = stmt.fetch(DDO.FETCH_ASSOC)) != null) {
+			while ((row = stmt.fetch(DDO.FETCH_ASSOC)) != null) {
 				String name = row['Field'];
 				_dbh.query(''' 
 				SELECT
@@ -109,25 +108,25 @@ class MysqlSchemaParser extends BaseSchemaParser {
 						RegExp exp = new RegExp(r'^(\w+)[\(]?([\d,]*)[\)]?( |$)');
 						RegExp expNoLength = new RegExp(r'^(\w+)\(');
 						int size, precision, scale;
-					String nativeType;
-						if(exp.hasMatch(row['Type'])) {
+						String nativeType;
+						if (exp.hasMatch(row['Type'])) {
 							Match match = exp.firstMatch(row['Type']);
 							nativeType = match.group(1);
-							if(match.groupCount > 2) {
+							if (match.groupCount > 2) {
 								int cpos = match.group(2).indexOf(',');
-								if(cpos != -1) {
+								if (cpos != -1) {
 									size = precision = int.parse(match.group(2).substring(0, cpos));
-									scale = int.parse(match.group(2).substring(cpos +1));
+									scale = int.parse(match.group(2).substring(cpos + 1));
 								} else {
 									size = int.parse(match.group(2));
 								}
 							}
 							_defaultTypeSizes.forEach((k, v) {
-								if(nativeType == k && size == v) {
+								if (nativeType == k && size == v) {
 									size = null;
 								}
 							});
-						} else if(expNoLength.hasMatch(row['Type'])) {
+						} else if (expNoLength.hasMatch(row['Type'])) {
 							nativeType = expNoLength.firstMatch(row['Type']).group(1);
 						} else {
 							nativeType = row['Type'];
@@ -136,10 +135,9 @@ class MysqlSchemaParser extends BaseSchemaParser {
 						String defaultValue = nativeType.contains(new RegExp(r'blob$|text$')) ? null : row['Default'];
 
 						String propelType = getMappedPropelType(nativeType);
-						if([PropelTypes.INTEGER, PropelTypes.BIGINT].contains(propelType) &&
-								row['Comment'].indexOf('timestamp') == 0) {
+						if ([PropelTypes.INTEGER, PropelTypes.BIGINT].contains(propelType) && row['Comment'].indexOf('timestamp') == 0) {
 							propelType = PropelTypes.INTEGER_TIMESTAMP;
-						} else if(propelType == null) {
+						} else if (propelType == null) {
 							propelType = Column.DEFAULT_TYPE;
 							warn('Column [${tableName}.${name}] has a column type (${nativeType}) that the parser does not support.');
 						}
@@ -150,17 +148,17 @@ class MysqlSchemaParser extends BaseSchemaParser {
 						column.getDomain().replaceSize(size);
 						column.getDomain().replaceScale(scale);
 
-						if(defaultValue != null) {
-							if(propelType == PropelTypes.BOOLEAN) {
-								if(defaultValue == '1') {
+						if (defaultValue != null) {
+							if (propelType == PropelTypes.BOOLEAN) {
+								if (defaultValue == '1') {
 									defaultValue = 'true';
 								}
-								if(defaultValue == '0') {
+								if (defaultValue == '0') {
 									defaultValue = 'false';
 								}
 							}
 							String type;
-							if(defaultValue == 'CURRENT_TIMESTAMP') {
+							if (defaultValue == 'CURRENT_TIMESTAMP') {
 								type = ColumnDefaultValue.TYPE_EXPR;
 							} else {
 								type = ColumnDefaultValue.TYPE_VALUE;
@@ -170,12 +168,33 @@ class MysqlSchemaParser extends BaseSchemaParser {
 						column.setAutoIncrement(autoIncrement);
 						column.setNotNull(!isNull);
 
-						if(_addVendorInfo) {
+						if (_addVendorInfo) {
 							VendorInfo vi = getNewVendorInfoObject(row);
 							column.addVendorInfo(vi);
 						}
 						table.addColumn(column);
 					});
+				});
+			}
+		});
+	}
+
+	void addForeignKeys(Table table) {
+		Database database = table.getDatabase();
+
+		_dbh.query("SHOW CREATE TABLE `${table.getName()}`").then((DDOStatement stmt) {
+			DDOResult row = stmt.fetch(DDO.FETCH_NUM);
+
+			List<ForeignKey> foreignKeys = new List<ForeignKey>();
+			RegExp regEx = new RegExp(r"CONSTRAINT `([^`]+)` FOREIGN KEY \((.+)\) REFERENCES `([^`]*)` \((.+)\)(.*)");
+			if (regEx.hasMatch(row.row.values.first)) {
+				regEx.allMatches(row.row.values.first).forEach((Match o) {
+	                String name = match.group(1);
+	                String rawlcol = match.group(2);
+	                String ftbl = match.group(3);
+	                String rawfcol = match.group(4);
+	                String fkey = match.group(5);
+	                List<String> lcols = new List<String>();
 				});
 			}
 		});

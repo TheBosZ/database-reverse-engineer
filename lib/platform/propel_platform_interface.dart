@@ -12,7 +12,7 @@ abstract class PropelPlatformInterface {
 
 	DDO getConnection();
 
-	void setGeneratorConfig(Object config);
+	//void setGeneratorConfig(GeneratorConfig config);
 
 	String getDatabaseType();
 
