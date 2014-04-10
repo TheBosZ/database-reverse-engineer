@@ -14,7 +14,7 @@ abstract class BaseSchemaParser implements SchemaParser {
 
 	String _migrationTable = 'propel_migration';
 
-	Object _platform;
+	PropelPlatformInterface _platform;
 
 	BaseSchemaParser(DDO this._dbh);
 
@@ -83,7 +83,7 @@ abstract class BaseSchemaParser implements SchemaParser {
 		_platform = platform;
 	}
 
-	Object getPlatform() {
+	PropelPlatformInterface getPlatform() {
 		if(_platform == null) {
 			_platform = getGeneratorConfig().getConfiguredPlatform();
 		}

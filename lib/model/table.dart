@@ -727,6 +727,14 @@ class Table extends ScopedElement implements IDMethod {
 
 	Database getDatabase() => _database;
 
+	List<ForeignKey> getForeignKeysReferencingTable(String tableName) {
+		return getForeignKeys().where((ForeignKey fk) => fk.getForeignTableName() == tableName);
+	}
+
+	List<ForeignKey> getColumnForeignKeys(String colName) {
+		return getForeignKeys().where((ForeignKey fk) => fk.getLocalColumns().contains(colName));
+	}
+
 	@override
 	void appendXml(XmlElement node) {
 		// TODO: implement appendXml

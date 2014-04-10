@@ -3,4 +3,4 @@ description: A pub package
 dependencies:
   xml: any
   dart_ddo:
-    path: C:\Users\Nathan\dart\pdodart
+    path: ..\pdodart
