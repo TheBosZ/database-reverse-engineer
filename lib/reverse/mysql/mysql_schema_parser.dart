@@ -95,7 +95,7 @@ class MysqlSchemaParser extends BaseSchemaParser {
 		Completer c = new Completer();
 
 		_dbh.query("SHOW COLUMNS FROM `${tableName}`").then((DDOStatement stmt) {
-			Map<String, String> row;
+			Map<String, Object> row;
 			while ((row = stmt.fetch(DDO.FETCH_ASSOC)) != null) {
 				String name = row['Field'];
 				_dbh.query(''' 

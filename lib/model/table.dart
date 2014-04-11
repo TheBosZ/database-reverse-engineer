@@ -237,7 +237,7 @@ class Table extends ScopedElement implements IDMethod {
 		}
 
 
-		List<Index> idxes = _indicies.values;
+		List<Index> idxes = _indicies.values.toList();
 		size = idxes.length;
 		for (x = 0; x < size; ++x) {
 			Index idx = idxes.elementAt(x);
