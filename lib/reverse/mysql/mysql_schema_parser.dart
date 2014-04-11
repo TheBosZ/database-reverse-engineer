@@ -67,27 +67,32 @@ class MysqlSchemaParser extends BaseSchemaParser {
 				database.addTable(table);
 				tables.add(table);
 			}
-
+			List<Future> list = new List<Future>();
 			tables.forEach((Table table) {
-				_addColumns(table);
+				list.add(_addColumns(table));
 			});
 
-			tables.forEach((Table table) {
-				addForeignKeys(table);
-				addIndexes(table);
-				addPrimaryKey(table);
-				if (_addVendorInfo) {
-					addTableVendorInfo(table);
-				}
+			Future.wait(list).then((_) {
+				list = new List<Future>();
+				tables.forEach((Table table) {
+
+					list.add(addForeignKeys(table).then((_) => addIndexes(table)).then((_) => addPrimaryKey(table)).then((_) {
+						if (_addVendorInfo) {
+							return addTableVendorInfo(table);
+						}
+						return new Future.value();
+					}));
+				});
+				Future.wait(list).then((_) => c.complete(tables.length));
 			});
-			c.complete(tables.length);
 		});
 		return c.future;
 	}
 
-	void _addColumns(Table table) {
+	Future _addColumns(Table table) {
 		String tableName = table.getName();
 		String databaseName = table.getDatabase().getName();
+		Completer c = new Completer();
 
 		_dbh.query("SHOW COLUMNS FROM `${tableName}`").then((DDOStatement stmt) {
 			Map<String, String> row;
@@ -176,28 +181,153 @@ class MysqlSchemaParser extends BaseSchemaParser {
 					});
 				});
 			}
+			c.complete();
 		});
+		return c.future;
 	}
 
-	void addForeignKeys(Table table) {
+	Future addForeignKeys(Table table) {
 		Database database = table.getDatabase();
+		Completer c = new Completer();
 
 		_dbh.query("SHOW CREATE TABLE `${table.getName()}`").then((DDOStatement stmt) {
-			DDOResult row = stmt.fetch(DDO.FETCH_NUM);
+			DDOResult row;
+			Map<String, ForeignKey> foreignKeys;
 
-			List<ForeignKey> foreignKeys = new List<ForeignKey>();
-			RegExp regEx = new RegExp(r"CONSTRAINT `([^`]+)` FOREIGN KEY \((.+)\) REFERENCES `([^`]*)` \((.+)\)(.*)");
-			if (regEx.hasMatch(row.row.values.first)) {
-				regEx.allMatches(row.row.values.first).forEach((Match o) {
-	                String name = match.group(1);
-	                String rawlcol = match.group(2);
-	                String ftbl = match.group(3);
-	                String rawfcol = match.group(4);
-	                String fkey = match.group(5);
-	                List<String> lcols = new List<String>();
-				});
+			while ((row = stmt.fetch(DDO.FETCH_NUM)) != null) {
+
+				foreignKeys = new Map<String, ForeignKey>();
+				RegExp regEx = new RegExp(r"CONSTRAINT `([^`]+)` FOREIGN KEY \((.+)\) REFERENCES `([^`]*)` \((.+)\)(.*)");
+				if (regEx.hasMatch(row.row.values.first)) {
+					regEx.allMatches(row.row.values.first).forEach((Match match) {
+						String name = match.group(1);
+						String rawlcol = match.group(2);
+						String ftbl = match.group(3);
+						String rawfcol = match.group(4);
+						String fkey = match.group(5);
+						List<String> lcols = new List<String>();
+						rawlcol.split(('`, `')).forEach((String piece) {
+							lcols.add(piece.replaceAll('`', '').trim());
+						});
+
+						List<String> fcols = new List<String>();
+						rawfcol.split(('`, `')).forEach((String piece) {
+							fcols.add(piece.replaceAll('`', '').trim());
+						});
+
+						Map<String, String> fkactions = {
+							'ON DELETE': ForeignKey.RESTRICT,
+							'ON UPDATE': ForeignKey.RESTRICT,
+						};
+
+						if (fkey != null && fkey.isNotEmpty) {
+							fkactions.keys.forEach((String fkaction) {
+								String result;
+								RegExp r = new RegExp("${fkaction} (${ForeignKey.CASCADE}|${ForeignKey.SETNULL})");
+								if (r.hasMatch(fkey)) {
+									fkactions[fkaction] = r.firstMatch(fkey).group(1);
+								}
+							});
+						}
+
+						fkactions.forEach((String key, String action) {
+							if (action == ForeignKey.RESTRICT) {
+								fkactions[key] = null;
+							}
+						});
+
+						List<Column> localColumns = new List<Column>();
+						List<Column> foreignColumns = new List<Column>();
+						Table foreignTable = database.getTable(ftbl, true);
+
+						fcols.forEach((String fcol) {
+							foreignColumns.add(foreignTable.getColumn(fcol));
+						});
+						lcols.forEach((String lcol) {
+							localColumns.add(table.getColumn(lcol));
+						});
+
+						if (!foreignKeys.containsKey(name)) {
+							ForeignKey fk = new ForeignKey(name);
+							fk.setForeignTableCommonName(foreignTable.getCommonName());
+							fk.setForeignSchemaName(foreignTable.getSchema());
+							fk.setOnDelete(fkactions['ON DELETE']);
+							fk.setOnUpdate(fkactions['ON UPDATE']);
+							table.addForeignKey(fk);
+							foreignKeys[name] = fk;
+						}
+
+						for (int x = 0; x < localColumns.length; ++x) {
+							foreignKeys[name].addReference(localColumns.elementAt(x), foreignColumns.elementAt(x));
+						}
+					});
+				}
 			}
+			c.complete();
 		});
+		return c.future;
+	}
+
+	Future addIndexes(Table table) {
+		Completer c = new Completer();
+		Map<String, Index> indexes = new Map<String, Index>();
+		_dbh.query("SHOW INDEX FROM `${table.getName()}`").then((DDOStatement stmt) {
+			DDOResult row;
+
+			while((row = stmt.fetch(DDO.FETCH_ASSOC)) != null) {
+				String colName = row.row['Column_name'];
+				String name = row.row['Key_name'];
+
+				if(name == 'PRIMARY') {
+					continue;
+				}
+
+				if(!indexes.containsKey(name)) {
+					bool isUnique = row.row['Non_unique'] == 0;
+					if(isUnique) {
+						indexes[name] = new Unique(name);
+					} else {
+						indexes[name] = new Index(name);
+					}
+					if(_addVendorInfo) {
+						VendorInfo vi = getNewVendorInfoObject(row.row);
+						indexes[name].addVendorInfo(vi);
+					}
+					table.addIndex(indexes[name]);
+				}
+				indexes[name].addColumn(table.getColumn(colName));
+			}
+			c.complete();
+		});
+		return c.future;
+	}
+
+	Future addPrimaryKey(Table table) {
+		Completer c = new Completer();
+		_dbh.query("SHOW KEYS FROM `${table.getName()}`").then((DDOStatement stmt){
+			DDOResult row;
+			while((row = stmt.fetch(DDO.FETCH_ASSOC)) != null) {
+				if(row.row['Key_name'] != 'PRIMARY') {
+					continue;
+				}
+				String name = row.row['Column_name'];
+				table.getColumn(name).setPrimaryKey(true);
+			}
+			c.complete();
+		});
+
+		return c.future;
+	}
+
+	Future addTableVendorInfo(Table table) {
+		Completer c = new Completer();
+		_dbh.query("SHOW TABLE STATUS LIKE '${table.getName()}'").then((DDOStatement stmt){
+			DDOResult row = stmt.fetch(DDO.FETCH_ASSOC);
+			VendorInfo vi = getNewVendorInfoObject(row.row);
+			table.addVendorInfo(vi);
+			c.complete();
+		});
+		return c.future;
 	}
 
 	@override

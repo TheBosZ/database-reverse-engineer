@@ -513,6 +513,10 @@ class Column extends PropelXmlElement {
 		return '';
 	}
 
+	void setAutoIncrement(bool v) {
+		_isAutoIncrement = v;
+	}
+
 	String getDartNative() => PropelTypes.getDartNative(getType());
 
 
