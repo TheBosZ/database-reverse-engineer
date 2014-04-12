@@ -246,38 +246,39 @@ class Database extends ScopedElement {
 
 	@override
 	void appendXml(XmlElement node) {
-		node.addChild(new XmlElement('database'));
-		node.attributes['name'] = _name;
+		XmlElement child = new XmlElement('database');
+		child.attributes['name'] = _name;
 		if(_pkg != null) {
-			node.attributes['package'] = _pkg;
+			child.attributes['package'] = _pkg;
 		}
 
 		if(_defaultIdMethod != null) {
-			node.attributes['defaultIdMethod'] = _defaultIdMethod;
+			child.attributes['defaultIdMethod'] = _defaultIdMethod;
 		}
 
 		if(_baseClass != null) {
-			node.attributes['baseClass'] = _baseClass;
+			child.attributes['baseClass'] = _baseClass;
 		}
 
 		if(_basePeer != null) {
-			node.attributes['basePeer'] = _basePeer;
+			child.attributes['basePeer'] = _basePeer;
 		}
 
 		if(_defaultDartNamingMethod != null) {
-			node.attributes['defaultDartNamingMethod'] = _defaultDartNamingMethod;
+			child.attributes['defaultDartNamingMethod'] = _defaultDartNamingMethod;
 		}
 
 		if(_defaultTranslateMethod != null) {
-			node.attributes['defaultTranslateMethod'] = _defaultTranslateMethod;
+			child.attributes['defaultTranslateMethod'] = _defaultTranslateMethod;
 		}
 
-		_vendorInfos.forEach((String k, VendorInfo v){
-			v.appendXml(node);
-		});
+		for(VendorInfo v in _vendorInfos.values) {
+			v.appendXml(child);
+		}
 
-		_tableList.forEach((Table t){
-			t.appendXml(node);
-		});
+		for(Table t in _tableList) {
+			t.appendXml(child);
+		}
+		node.addChild(child);
 	}
 }

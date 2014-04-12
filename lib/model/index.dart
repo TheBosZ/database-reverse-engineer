@@ -9,7 +9,7 @@ class Index extends PropelXmlElement {
 
 	Table _parentTable;
 
-	List<Column> _indexColumns;
+	List<Column> _indexColumns = new List<Column>();
 
 	Map<String, int> _indexColumnSizes = new Map<String, int>();
 
@@ -19,7 +19,7 @@ class Index extends PropelXmlElement {
 		inputs.add(t.getDatabase());
 		inputs.add(t.getCommonName());
 		inputs.add(isUnique() ? 'U' : 'I');
-		if(isUnique()) {
+		if (isUnique()) {
 			inputs.add(t.getUnices().length + 1);
 		} else {
 			inputs.add(t.getIndices().length + 1);
@@ -40,12 +40,13 @@ class Index extends PropelXmlElement {
 	}
 
 	String getName() {
-		if(_indexName == null) {
+		if (_indexName == null) {
 			_createName();
 		}
 		Database db = getTable().getDatabase();
-		if(db != null) {
-			return _indexName.substring(0, db.getPlatform().getMaxColumnNameLength());
+		if (db != null) {
+			int maxLength = db.getPlatform().getMaxColumnNameLength();
+			return _indexName.length > maxLength ? _indexName.substring(0, db.getPlatform().getMaxColumnNameLength()) : _indexName;
 		}
 		return _indexName;
 	}
@@ -63,9 +64,9 @@ class Index extends PropelXmlElement {
 	String getTableName() => _parentTable.getName();
 
 	void addColumn(Object data) {
-		if(data is Column) {
+		if (data is Column) {
 			_indexColumns.add(data);
-			if(data.getSize() != null && data.getSize() != 0) {
+			if (data.getSize() != null && data.getSize() != 0) {
 				_indexColumnSizes[data.getName()] = data.getSize();
 			}
 		} else {
@@ -78,7 +79,7 @@ class Index extends PropelXmlElement {
 	void setColumns(List<Column> indexCols) {
 		_indexColumns = new List<Column>();
 		resetColumnSize();
-		indexCols.forEach((Column c){
+		indexCols.forEach((Column c) {
 			addColumn(c);
 		});
 	}
@@ -86,7 +87,7 @@ class Index extends PropelXmlElement {
 	bool hasColumnSize(String colName) => _indexColumnSizes.containsKey(colName);
 
 	int getColumnSize(String colName) {
-		if(_indexColumnSizes.containsKey(colName)) {
+		if (_indexColumnSizes.containsKey(colName)) {
 			return _indexColumnSizes[colName];
 		}
 		return null;
@@ -97,17 +98,15 @@ class Index extends PropelXmlElement {
 	}
 
 	bool hasColumnAtPosition(int pos, String name, [int size = null, bool caseInsensitive = false]) {
-		if(_indexColumns.length >= pos) {
+		if (_indexColumns.length >= pos) {
 			return false;
 		}
 
-		bool test = caseInsensitive ?
-			_indexColumns.elementAt(pos).getName().toLowerCase() != name.toLowerCase()
-			: _indexColumns.elementAt(pos).getName() != name;
-		if(test) {
+		bool test = caseInsensitive ? _indexColumns.elementAt(pos).getName().toLowerCase() != name.toLowerCase() : _indexColumns.elementAt(pos).getName() != name;
+		if (test) {
 			return false;
 		}
-		if(size != null && _indexColumnSizes[name] != size) {
+		if (size != null && _indexColumnSizes[name] != size) {
 			return false;
 		}
 		return true;
@@ -123,15 +122,16 @@ class Index extends PropelXmlElement {
 		XmlElement child = new XmlElement('index');
 		child.attributes['name'] = getName();
 
-		_indexColumns.forEach((Column c){
+		for (Column c in _indexColumns) {
 			XmlElement colNode = new XmlElement('index-column');
 			colNode.attributes['name'] = c.getName();
 			child.addChild(colNode);
-		});
+		}
+		for (VendorInfo vi in _vendorInfos.values) {
+			vi.appendXml(child);
+		}
 
 		node.addChild(child);
-		_vendorInfos.forEach((String k, VendorInfo vi) {
-			vi.appendXml(child);
-		});
+
 	}
 }

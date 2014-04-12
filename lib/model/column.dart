@@ -270,7 +270,7 @@ class Column extends PropelXmlElement {
 
 	List<Inheritance> getChildren() => _inheritanceList;
 
-	bool isInheritance() => _isInheritance;
+	bool isInheritance() => _isInheritance != null && _isInheritance;
 
 	bool isEnumeratedClasses() => _isEnumeratedClasses;
 
@@ -330,7 +330,7 @@ class Column extends PropelXmlElement {
 
 	bool isUnique() => _isUnique;
 
-	bool requiresTransactionInPostgres() => _needsTransactionInPostgres;
+	bool requiresTransactionInPostgres() => _needsTransactionInPostgres != null && _needsTransactionInPostgres;
 
 	bool isForeignKey() => getForeignKeys().length > 0;
 
@@ -371,7 +371,13 @@ class Column extends PropelXmlElement {
 		}
 	}
 
-	String getType() => getDomain().getType();
+	String getType() {
+		String type = getDomain().getType();
+		if(type != null) {
+			return type;
+		}
+		return '';
+	}
 
 	String getDDOType() => PropelTypes.getDDOType(getType());
 
@@ -436,7 +442,7 @@ class Column extends PropelXmlElement {
 			child.attributes[def.isExpression() ? 'defaultExpr' : 'defaultValue'] = def.getValue();
 		}
 
-		if (_isInheritance) {
+		if (_isInheritance != null && _isInheritance) {
 			child.attributes['inheritance'] = _inheritanceType;
 			_inheritanceList.forEach((Inheritance i) {
 				i.appendXml(child);
@@ -450,9 +456,9 @@ class Column extends PropelXmlElement {
 			}
 		}
 
-		_vendorInfos.forEach((String k, VendorInfo vi) {
+		for(VendorInfo vi in _vendorInfos.values) {
 			vi.appendXml(child);
-		});
+		}
 
 		node.addChild(child);
 	}

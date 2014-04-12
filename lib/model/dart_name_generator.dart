@@ -9,7 +9,7 @@ class DartNameGenerator implements NameGenerator {
 
 		if(inputs.length > 2) {
 			String prefix = inputs.elementAt(2);
-			if(prefix.isNotEmpty && schemaName.substring(0, prefix.length) == prefix) {
+			if(prefix != null && prefix.isNotEmpty && schemaName.substring(0, prefix.length) == prefix) {
 				schemaName = schemaName.substring(prefix.length);
 			}
 		}
@@ -68,7 +68,7 @@ class DartNameGenerator implements NameGenerator {
 	 * @see        #underscoreMethod()
 	 */
 	String _cleanMethod(String schemaName) {
-		List<String> tokens = schemaName.split(new RegExp("[^A-Z0-9]"));
+		List<String> tokens = schemaName.split(new RegExp("[^A-Z0-9]", caseSensitive: false));
 		if(tokens.length < 2) {
 			return schemaName;
 		}

@@ -123,7 +123,7 @@ class Table extends ScopedElement implements IDMethod {
 	}
 
 	void doFinalInitialization() {
-		if (_heavyIndexing) {
+		if (_heavyIndexing != null && _heavyIndexing) {
 			_doHeavyIndexing();
 		}
 
@@ -310,7 +310,7 @@ class Table extends ScopedElement implements IDMethod {
 			_columnsByLowercaseName[data.getName().toLowerCase()] = data;
 			_columnsByDartName[data.getDartName()] = data;
 			data.setPosition(_columnList.length);
-			_needsTransactionInPostgres = _needsTransactionInPostgres || data.requiresTransactionInPostgres();
+			_needsTransactionInPostgres = (_needsTransactionInPostgres != null && _needsTransactionInPostgres) || data.requiresTransactionInPostgres();
 			return data;
 		} else {
 			Column col = new Column();
@@ -806,33 +806,33 @@ class Table extends ScopedElement implements IDMethod {
 			child.attributes['isCrossRef'] = getIsCrossRef().toString();
 		}
 
-		_columnList.forEach((Column c) {
+		for(Column c in _columnList)  {
 			c.appendXml(child);
-		});
+		};
 
-		_validatorList.forEach((Validator v) {
+		for(Validator v in _validatorList) {
 			v.appendXml(child);
-		});
+		}
 
-		_foreignKeys.forEach((ForeignKey fk) {
+		for(ForeignKey fk in _foreignKeys) {
 			fk.appendXml(child);
-		});
+		}
 
-		_idMethodParameters.forEach((IdMethodParameter p) {
+		for(IdMethodParameter p in _idMethodParameters) {
 			p.appendXml(child);
-		});
+		}
 
-		_indicies.forEach((String k, Index v) {
+		for(Index v in _indicies.values) {
 			v.appendXml(child);
-		});
+		}
 
-		_unices.forEach((Unique u) {
+		for(Unique u in _unices) {
 			u.appendXml(child);
-		});
+		}
 
-		_vendorInfos.forEach((String k, VendorInfo vi) {
+		for(VendorInfo vi in _vendorInfos.values) {
 			vi.appendXml(child);
-		});
+		}
 		node.addChild(child);
 	}
 
