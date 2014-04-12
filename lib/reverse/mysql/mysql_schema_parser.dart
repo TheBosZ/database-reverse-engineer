@@ -139,6 +139,7 @@ class MysqlSchemaParser extends BaseSchemaParser {
 						int v = _defaultTypeSizes[k];
 						if (nativeType == k && size == v) {
 							size = null;
+							break;
 						}
 					}
 				} else if (expNoLength.hasMatch(row['Type'])) {
@@ -208,8 +209,8 @@ class MysqlSchemaParser extends BaseSchemaParser {
 
 				foreignKeys = new Map<String, ForeignKey>();
 				RegExp regEx = new RegExp(r"CONSTRAINT `([^`]+)` FOREIGN KEY \((.+)\) REFERENCES `([^`]*)` \((.+)\)(.*)");
-				if (regEx.hasMatch(row.row.values.first)) {
-					for(Match match in row.row.values.first) {
+				if (regEx.hasMatch(row.row.values.elementAt(1))) {
+					for(Match match in regEx.allMatches(row.row.values.elementAt(1))) {
 						String name = match.group(1);
 						String rawlcol = match.group(2);
 						String ftbl = match.group(3);

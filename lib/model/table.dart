@@ -160,12 +160,12 @@ class Table extends ScopedElement implements IDMethod {
 		tableIndicies.addAll(getIndices());
 		tableIndicies.addAll(getUnices());
 
-		tableIndicies.forEach((Index i) {
+		for(Index i in tableIndicies) {
 			indicies.addAll(collectIndexedColumns(i.getName(), i.getColumns()));
-		});
+		}
 
 		int counter = 0;
-		getReferrers().forEach((ForeignKey fk) {
+		for(ForeignKey fk in getReferrers()) {
 			List<Column> refedColumns = fk.getForeignColumnObjects();
 			String refedColumnsHash = getColumnList(refedColumns);
 			if (!_indicies.containsKey(refedColumnsHash)) {
@@ -174,31 +174,35 @@ class Table extends ScopedElement implements IDMethod {
 				idx.setColumns(refedColumns);
 				idx.resetColumnSize();
 				addIndex(idx);
-				_indicies.addAll(collectIndexedColumns(idx.getName(), refedColumns));
+				collectIndexedColumns(idx.getName(), refedColumns);
 			}
-		});
+		}
 
-		getForeignKeys().forEach((ForeignKey fk) {
+		for(ForeignKey fk in getForeignKeys())  {
 			List<Column> localColumns = fk.getLocalColumnObjects();
 			String localColHash = getColumnList(localColumns);
 			if (!_indicies.containsKey(localColHash)) {
 				String fkname = fk.getName();
-				String name = "${fkname.substring(0, fkname.lastIndexOf('FK_'))}FI_${fkname.substring(fkname.lastIndexOf('FK_')+3)}";
+				int fkInd = fkname.toUpperCase().lastIndexOf('FK_');
+				String name = "${fkname.substring(0, fkInd)}FI_${fkname.substring(fkInd+3)}";
 				Index idx = new Index();
 				idx.setName(name);
 				idx.setColumns(localColumns);
 				idx.resetColumnSize();
 				addIndex(idx);
-				_indicies.addAll(collectIndexedColumns(idx.getName(), localColumns));
-
+				collectIndexedColumns(idx.getName(), localColumns);
 			}
-		});
+		}
 	}
 
 	Map<String, Index> collectIndexedColumns(String indexName, List<Column> columns) {
-		Index idx = getIndices().where((Index i) => i.getName() == indexName).first;
 		Map<String, Index> idxList = new Map<String, Index>();
 		List<Column> idxCols = new List<Column>();
+		List<Index> indices = getIndices().where((Index i) => i.getName().toUpperCase() == indexName.toUpperCase()).toList();
+		if(indices.isEmpty) {
+			return idxList;
+		}
+		Index idx = indices.first;
 		columns.forEach((Column c) {
 			idxCols.add(c);
 			String idxColHash = getColumnList(idxCols);
@@ -470,7 +474,7 @@ class Table extends ScopedElement implements IDMethod {
 		_containsForeignPK = b;
 	}
 
-	bool getContainsForeignPK() => _containsForeignPK;
+	bool getContainsForeignPK() => _containsForeignPK != null && _containsForeignPK;
 
 	List<String> getForeignTableNames() {
 		if (_foreignTableNames == null) {
@@ -677,7 +681,7 @@ class Table extends ScopedElement implements IDMethod {
 
 	List<IdMethodParameter> getIdMethodParamters() => _idMethodParameters;
 
-	List<Index> getIndices() => _indicies.values;
+	List<Index> getIndices() => _indicies.values.toList();
 
 	List<Unique> getUnices() => _unices;
 

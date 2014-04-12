@@ -1,8 +1,8 @@
 part of database_reverse_engineer;
 
 class Domain extends PropelXmlElement {
-	Domain([String _propelType = null, String sqltype = null, int _size = null, int _scale = null]): super('domain') {
-		_sqlType = sqltype != null ? sqltype : _propelType;
+	Domain([String this._propelType = null, String this._sqlType = null, int this._size = null, int this._scale = null]): super('domain') {
+		_sqlType = _sqlType != null ? _sqlType : _propelType;
 	}
 
 	/**

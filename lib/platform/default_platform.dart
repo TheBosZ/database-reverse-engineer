@@ -67,7 +67,8 @@ class DefaultPlatform implements PropelPlatformInterface {
 		if (!_schemaDomainMap.containsKey(propelType)) {
 			throw new Exception('Cannot map unknown Propel type "${propelType}" to native database type');
 		}
-		return _schemaDomainMap[propelType];
+		Domain d = _schemaDomainMap[propelType];
+		return d;
 	}
 
 	String getSequenceName(Table table) {

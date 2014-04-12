@@ -292,7 +292,7 @@ class Column extends PropelXmlElement {
 		_isPrimaryKey = v;
 	}
 
-	bool isPrimaryKey() => _isPrimaryKey;
+	bool isPrimaryKey() => _isPrimaryKey != null && _isPrimaryKey;
 
 	void setNodeKey(bool k) {
 		_isNodeKey = k;
