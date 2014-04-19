@@ -130,11 +130,11 @@ class Table extends ScopedElement implements IDMethod {
 		doNaming();
 
 		bool anyAutoInc = false;
-		getColumns().forEach((Column c) {
+		for(Column c in getColumns()) {
 			if (c.isAutoIncrement()) {
 				anyAutoInc = true;
 			}
-		});
+		}
 
 		if (getIdMethod() == IDMethod.NATIVE && !anyAutoInc) {
 			setIdMethod(IDMethod.NO_ID_METHOD);
@@ -203,19 +203,19 @@ class Table extends ScopedElement implements IDMethod {
 			return idxList;
 		}
 		Index idx = indices.first;
-		columns.forEach((Column c) {
+		for(Column c in columns) {
 			idxCols.add(c);
 			String idxColHash = getColumnList(idxCols);
 			if (!idxList.containsKey(idxColHash)) {
 				idxList[idxColHash] = idx;
 			}
-		});
+		}
 		return idxList;
 	}
 
 	String getColumnList(List<Object> columns, [String delim = ',']) {
 		List<String> lis = new List<String>();
-		columns.forEach((Object c) {
+		for(Object c in columns) {
 			String name;
 			if (c is Column) {
 				name = c.getName();
@@ -223,7 +223,7 @@ class Table extends ScopedElement implements IDMethod {
 				name = c.toString();
 			}
 			lis.add(name);
-		});
+		}
 		return lis.join(delim);
 	}
 
@@ -367,11 +367,11 @@ class Table extends ScopedElement implements IDMethod {
 	}
 
 	void removeValidatorForColumn(String colName) {
-		_validatorList.forEach((Validator v) {
+		for(Validator v in _validatorList) {
 			if (v.getColumnName() == colName) {
 				_validatorList.remove(v);
 			}
-		});
+		}
 	}
 
 	ForeignKey addForeignKey(Object data) {
@@ -416,7 +416,7 @@ class Table extends ScopedElement implements IDMethod {
 	List<ForeignKey> getReferrers() => _referrers;
 
 	void setupReferrers([bool throwErrors = false]) {
-		getForeignKeys().forEach((ForeignKey fk) {
+		for(ForeignKey fk in getForeignKeys()) {
 			Table foreignTable = getDatabase().getTable(fk.getForeignTableName());
 			if (foreignTable != null) {
 				List<ForeignKey> referrers = getReferrers();
@@ -426,18 +426,17 @@ class Table extends ScopedElement implements IDMethod {
 			} else if (throwErrors) {
 				throw new Exception('Table "${getName()}" contains a foreign key to nonexistent table "${fk.getForeignTableName()}"');
 			}
-			fk.getLocalColumns().forEach((String colname) {
-				Column col = getColumn(colname);
+			for(String colName in fk.getLocalColumns()) {
+				Column col = getColumn(colName);
 				if (col != null) {
 					if (col.isPrimaryKey() && !getContainsForeignPK()) {
 						setContainsForeignPK(true);
 					}
 				} else if (throwErrors) {
-					throw new Exception('Table "${getName()}" contains a foreign key with nonexistent local column "${colname}"');
+					throw new Exception('Table "${getName()}" contains a foreign key with nonexistent local column "${colName}"');
 				}
-			});
-
-			fk.getForeignColumns().forEach((String colName) {
+			}
+			for(String colName in fk.getForeignColumns()) {
 				if (foreignTable == null) {
 					return;
 				}
@@ -449,24 +448,24 @@ class Table extends ScopedElement implements IDMethod {
 				} else if (throwErrors) {
 					throw new Exception('Table "${getName()}" contains a foreign key to table "${foreignTable.getName()}" with nonexistant column "${colName}"');
 				}
-			});
+			}
 
 			if (getDatabase().getPlatform() is MysqlPlatform) {
 				addExtraIndicies();
 			}
 
-		});
+		}
 	}
 
 	List<List<ForeignKey>> getCrossPks() {
 		List<List<ForeignKey>> crossfks = new List<List<ForeignKey>>();
-		getReferrers().forEach((ForeignKey fk) {
+		for(ForeignKey fk in getReferrers()) {
 			if (fk.getTable().getIsCrossRef()) {
-				fk.getOtherFKs().forEach((ForeignKey crossFk) {
+				for(ForeignKey crossFk in fk.getOtherFKs()) {
 					crossfks.add([fk, crossFk]);
-				});
+				}
 			}
-		});
+		}
 		return crossfks;
 	}
 
@@ -657,21 +656,21 @@ class Table extends ScopedElement implements IDMethod {
 
 	int getNumLazyLoadColumns() {
 		int c = 0;
-		_columnList.forEach((Column col) {
+		for(Column col in _columnList) {
 			if (col.isLazyLoad()) {
 				++c;
 			}
-		});
+		}
 		return c;
 	}
 
 	bool hasEnumColumns() {
 		bool result = false;
-		getColumns().forEach((Column col) {
+		for(Column col in getColumns()) {
 			if (col.isEnumType()) {
 				result = true;
 			}
-		});
+		}
 		return result;
 	}
 
@@ -842,11 +841,11 @@ class Table extends ScopedElement implements IDMethod {
 
 	List<Column> getPrimaryKey() {
 		List<Column> pks = new List<Column>();
-		_columnList.forEach((Column c) {
+		for(Column c in _columnList) {
 			if (c.isPrimaryKey()) {
 				pks.add(c);
 			}
-		});
+		}
 		return pks;
 	}
 

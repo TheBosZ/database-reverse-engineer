@@ -49,34 +49,34 @@ class PropelTypes {
 
 	static final List<String> BOOLEAN_TYPES = [PropelTypes.BOOLEAN, PropelTypes.BOOLEAN_EMU];
 
-	static const String CHAR_NATIVE_TYPE = "string";
-	static const String VARCHAR_NATIVE_TYPE = "string";
-	static const String LONGVARCHAR_NATIVE_TYPE = "string";
-	static const String CLOB_NATIVE_TYPE = "string";
-	static const String CLOB_EMU_NATIVE_TYPE = "string";
-	static const String NUMERIC_NATIVE_TYPE = "string";
-	static const String DECIMAL_NATIVE_TYPE = "string";
+	static const String CHAR_NATIVE_TYPE = "String";
+	static const String VARCHAR_NATIVE_TYPE = "String";
+	static const String LONGVARCHAR_NATIVE_TYPE = "String";
+	static const String CLOB_NATIVE_TYPE = "String";
+	static const String CLOB_EMU_NATIVE_TYPE = "String";
+	static const String NUMERIC_NATIVE_TYPE = "String";
+	static const String DECIMAL_NATIVE_TYPE = "String";
 	static const String TINYINT_NATIVE_TYPE = "int";
 	static const String SMALLINT_NATIVE_TYPE = "int";
 	static const String INTEGER_NATIVE_TYPE = "int";
-	static const String BIGINT_NATIVE_TYPE = "string";
+	static const String BIGINT_NATIVE_TYPE = "String";
 	static const String REAL_NATIVE_TYPE = "float";
 	static const String FLOAT_NATIVE_TYPE = "float";
 	static const String DOUBLE_NATIVE_TYPE = "float";
-	static const String BINARY_NATIVE_TYPE = "string";
-	static const String VARBINARY_NATIVE_TYPE = "string";
-	static const String LONGVARBINARY_NATIVE_TYPE = "string";
-	static const String BLOB_NATIVE_TYPE = "string";
-	static const String BU_DATE_NATIVE_TYPE = "string";
-	static const String DATE_NATIVE_TYPE = "string";
-	static const String TIME_NATIVE_TYPE = "string";
-	static const String TIMESTAMP_NATIVE_TYPE = "string";
-	static const String BU_TIMESTAMP_NATIVE_TYPE = "string";
+	static const String BINARY_NATIVE_TYPE = "String";
+	static const String VARBINARY_NATIVE_TYPE = "String";
+	static const String LONGVARBINARY_NATIVE_TYPE = "String";
+	static const String BLOB_NATIVE_TYPE = "String";
+	static const String BU_DATE_NATIVE_TYPE = "String";
+	static const String DATE_NATIVE_TYPE = "String";
+	static const String TIME_NATIVE_TYPE = "String";
+	static const String TIMESTAMP_NATIVE_TYPE = "String";
+	static const String BU_TIMESTAMP_NATIVE_TYPE = "String";
 	static const String BOOLEAN_NATIVE_TYPE = "bool";
 	static const String BOOLEAN_EMU_NATIVE_TYPE = "bool";
 	static const String OBJECT_NATIVE_TYPE = "";
 	static const String DART_ARRAY_NATIVE_TYPE = "list";
-	static const String ENUM_NATIVE_TYPE = "string";
+	static const String ENUM_NATIVE_TYPE = "String";
 
 	/**
 	 * Mapping between Propel types and Dart native types.
@@ -290,7 +290,7 @@ class PropelTypes {
 	 * @return     boolean Whether the Dart type is a primitive (string, int, boolean, float)
 	 */
 	static bool isDartPrimitiveType(String dartType) {
-		return ["bool", "int", "double", "float", "string"].contains(dartType);
+		return ["bool", "int", "double", "float", "String"].contains(dartType);
 	}
 
 	/**

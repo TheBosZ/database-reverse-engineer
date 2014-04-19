@@ -1,7 +1,7 @@
 library database_reverse_engineer;
 
 import 'package:xml/xml.dart';
-import 'package:dart_ddo/ddo.dart';
+import 'package:ddo/ddo.dart';
 import 'dart:async';
 import 'dart:convert';
 
