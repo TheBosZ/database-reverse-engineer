@@ -4,6 +4,7 @@ import 'package:xml/xml.dart';
 import 'package:ddo/ddo.dart';
 import 'dart:async';
 import 'dart:convert';
+import 'package:ddo/connection/ddo_connection.dart';
 
 export 'package:xml/xml.dart';
 

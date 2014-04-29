@@ -8,11 +8,12 @@ class Unique extends Index {
 	void appendXml(XmlElement node) {
 		node.addChild(new XmlElement('unique'));
 		node.attributes['name'] = getName();
-		getColumns().forEach((String name) {
+		for(Column c in getColumns()) {
+			String name = c.getName();
 			XmlElement uniq = new XmlElement('unique-column');
 			uniq.attributes['name'] = name;
 			node.addChild(uniq);
-		});
+		}
 
 		_vendorInfos.forEach((String f, VendorInfo vi) {
 			vi.appendXml(node);

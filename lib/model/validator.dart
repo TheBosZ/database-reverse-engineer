@@ -23,7 +23,7 @@ class Validator extends PropelXmlElement {
 	@override
 	void _setupObject() {
 		_column = getTable().getColumn(getAttribute('column'));
-		_translate = getAttribute("translate", getTable().getDataBase().getDefaultTranslateMethod());
+		_translate = getAttribute("translate", getTable().getDatabase().getDefaultTranslateMethod());
 	}
 
 	Object addRule(Object data) {

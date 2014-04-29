@@ -160,7 +160,7 @@ class PropelTypes {
 	 *
 	 * @var        array
 	 */
-	static final Map<String, String> propelTypeToDDOTypeMap = {
+	static final Map<String, int> propelTypeToDDOTypeMap = {
 		PropelTypes.CHAR: DDO.PARAM_STR,
 		PropelTypes.VARCHAR: DDO.PARAM_STR,
 		PropelTypes.LONGVARCHAR: DDO.PARAM_STR,
