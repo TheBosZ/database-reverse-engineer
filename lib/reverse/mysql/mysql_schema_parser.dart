@@ -58,7 +58,7 @@ class MysqlSchemaParser extends BaseSchemaParser {
 		_dbh.query('SHOW TABLES').then((DDOStatement stmt) {
 			DDOResult row;
 			List<Table> tables = new List<Table>();
-			while ((row = stmt.fetch(DDO.FETCH_NUM)) != null) {
+			while ((row = stmt.fetch(DDO.FETCH_ASSOC)) != null) {
 				String name = row.row.values.elementAt(0);
 				if (name == getMigrationTable()) {
 					continue;
@@ -205,7 +205,7 @@ class MysqlSchemaParser extends BaseSchemaParser {
 			DDOResult row;
 			Map<String, ForeignKey> foreignKeys;
 
-			while ((row = stmt.fetch(DDO.FETCH_NUM)) != null) {
+			while ((row = stmt.fetch(DDO.FETCH_ASSOC)) != null) {
 
 				foreignKeys = new Map<String, ForeignKey>();
 				RegExp regEx = new RegExp(r"CONSTRAINT `([^`]+)` FOREIGN KEY \((.+)\) REFERENCES `([^`]*)` \((.+)\)(.*)");
