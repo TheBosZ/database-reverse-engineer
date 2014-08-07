@@ -601,7 +601,7 @@ class Table extends ScopedElement implements IDMethod {
 	}
 
 	String getDefaultStringFormat() {
-		if (_defaultStringFormat == null && getDatabase() && getDatabase().getDefaultStringFormat()) {
+		if (_defaultStringFormat == null && getDatabase() != null && getDatabase().getDefaultStringFormat() != null) {
 			return getDatabase().getDefaultStringFormat();
 		}
 		return _defaultStringFormat;
