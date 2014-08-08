@@ -107,238 +107,236 @@ class MysqlSchemaParser extends BaseSchemaParser {
     ''');
 
 	Future _addColumns(Table table) {
-		Completer c = new Completer();
 		String databaseName = table.getDatabase().getName();
 
-		 _getColumnDefinitions(table).then((DDOStatement stmt) {
-			Map<String, String> row;
-			DDOResult r;
-			while ((r = stmt.fetch(DDO.FETCH_ASSOC)) != null) {
-				row = r.row;
-				String name = row['Field'];
-				bool isNull = row['Null'] == 'YES';
-				bool autoIncrement = row['Extra'].contains('auto_increment');
-				RegExp exp = new RegExp(r'^(\w+)[\(]?([\d,]*)[\)]?( |$)');
-				RegExp expNoLength = new RegExp(r'^(\w+)\(');
-				int size, precision, scale;
-				String nativeType;
-				if (exp.hasMatch(row['Type'])) {
-					Match match = exp.firstMatch(row['Type']);
-					nativeType = match.group(1);
-					if (match.groupCount > 2) {
-						int cpos = match.group(2).indexOf(',');
-						if (cpos != -1) {
-							size = precision = int.parse(match.group(2).substring(0, cpos));
-							scale = int.parse(match.group(2).substring(cpos + 1));
-						} else {
-							String s = match.group(2);
-							size = s != null && s.isNotEmpty ? int.parse(s) : null;
+		 return _getColumnDefinitions(table).then((DDOStatement stmt) {
+			return new Future.sync(() {
+				Map<String, String> row;
+				DDOResult r;
+				while ((r = stmt.fetch(DDO.FETCH_ASSOC)) != null) {
+					row = r.row;
+					String name = row['Field'];
+					bool isNull = row['Null'] == 'YES';
+					bool autoIncrement = row['Extra'].contains('auto_increment');
+					RegExp exp = new RegExp(r'^(\w+)[\(]?([\d,]*)[\)]?( |$)');
+					RegExp expNoLength = new RegExp(r'^(\w+)\(');
+					int size, precision, scale;
+					String nativeType;
+					if (exp.hasMatch(row['Type'])) {
+						Match match = exp.firstMatch(row['Type']);
+						nativeType = match.group(1);
+						if (match.groupCount > 2) {
+							int cpos = match.group(2).indexOf(',');
+							if (cpos != -1) {
+								size = precision = int.parse(match.group(2).substring(0, cpos));
+								scale = int.parse(match.group(2).substring(cpos + 1));
+							} else {
+								String s = match.group(2);
+								size = s != null && s.isNotEmpty ? int.parse(s) : null;
+							}
 						}
-					}
-					for(String k in _defaultTypeSizes.keys) {
-						int v = _defaultTypeSizes[k];
-						if (nativeType == k && size == v) {
-							size = null;
-							break;
+						for(String k in _defaultTypeSizes.keys) {
+							int v = _defaultTypeSizes[k];
+							if (nativeType == k && size == v) {
+								size = null;
+								break;
+							}
 						}
-					}
-				} else if (expNoLength.hasMatch(row['Type'])) {
-					nativeType = expNoLength.firstMatch(row['Type']).group(1);
-				} else {
-					nativeType = row['Type'];
-				}
-
-				String defaultValue = nativeType.contains(new RegExp(r'blob$|text$')) ? null : row['Default'];
-
-				String propelType = getMappedPropelType(nativeType);
-				if ([PropelTypes.INTEGER, PropelTypes.BIGINT].contains(propelType) && row['Comment'] != null && row['Comment'] is String && row['Comment'].indexOf('timestamp') == 0) {
-					propelType = PropelTypes.INTEGER_TIMESTAMP;
-				} else if (propelType == null) {
-					propelType = Column.DEFAULT_TYPE;
-					warn('Column [${table.getName()}.${name}] has a column type (${nativeType}) that the parser does not support.');
-				}
-
-				Column column = new Column(name);
-				column.setTable(table);
-				column.setDomainForType(propelType);
-				column.getDomain().replaceSize(size);
-				column.getDomain().replaceScale(scale);
-				if (defaultValue != null) {
-					if (propelType == PropelTypes.BOOLEAN) {
-						if (defaultValue == '1') {
-							defaultValue = 'true';
-						}
-						if (defaultValue == '0') {
-							defaultValue = 'false';
-						}
-					}
-					String type;
-					if (defaultValue == 'CURRENT_TIMESTAMP') {
-						type = ColumnDefaultValue.TYPE_EXPR;
+					} else if (expNoLength.hasMatch(row['Type'])) {
+						nativeType = expNoLength.firstMatch(row['Type']).group(1);
 					} else {
-						type = ColumnDefaultValue.TYPE_VALUE;
+						nativeType = row['Type'];
 					}
-					column.getDomain().setDefaultValue(new ColumnDefaultValue(defaultValue, type));
-				}
-				column.setAutoIncrement(autoIncrement);
-				column.setNotNull(!isNull);
 
-				if (_addVendorInfo) {
-					VendorInfo vi = getNewVendorInfoObject(row);
-					column.addVendorInfo(vi);
-				}
-				table.addColumn(column);
-				//Future t = _getColumnComment(column).then((DDOStatement comState) {
-					//row['Comment'] = comState.fetchColumn();
+					String defaultValue = nativeType.contains(new RegExp(r'blob$|text$')) ? null : row['Default'];
 
-				//});
-			}
-			c.complete();
+					String propelType = getMappedPropelType(nativeType);
+					if ([PropelTypes.INTEGER, PropelTypes.BIGINT].contains(propelType) && row['Comment'] != null && row['Comment'] is String && row['Comment'].indexOf('timestamp') == 0) {
+						propelType = PropelTypes.INTEGER_TIMESTAMP;
+					} else if (propelType == null) {
+						propelType = Column.DEFAULT_TYPE;
+						warn('Column [${table.getName()}.${name}] has a column type (${nativeType}) that the parser does not support.');
+					}
+
+					Column column = new Column(name);
+					column.setTable(table);
+					column.setDomainForType(propelType);
+					column.getDomain().replaceSize(size);
+					column.getDomain().replaceScale(scale);
+					if (defaultValue != null) {
+						if (propelType == PropelTypes.BOOLEAN) {
+							if (defaultValue == '1') {
+								defaultValue = 'true';
+							}
+							if (defaultValue == '0') {
+								defaultValue = 'false';
+							}
+						}
+						String type;
+						if (defaultValue == 'CURRENT_TIMESTAMP') {
+							type = ColumnDefaultValue.TYPE_EXPR;
+						} else {
+							type = ColumnDefaultValue.TYPE_VALUE;
+						}
+						column.getDomain().setDefaultValue(new ColumnDefaultValue(defaultValue, type));
+					}
+					column.setAutoIncrement(autoIncrement);
+					column.setNotNull(!isNull);
+
+					if (_addVendorInfo) {
+						VendorInfo vi = getNewVendorInfoObject(row);
+						column.addVendorInfo(vi);
+					}
+					table.addColumn(column);
+					//Future t = _getColumnComment(column).then((DDOStatement comState) {
+						//row['Comment'] = comState.fetchColumn();
+
+					//});
+				}
+			});
 		});
-		return c.future;
 	}
 
 	Future addForeignKeys(Table table) {
-		Completer c = new Completer();
-		_getForeignKeyDefinitions(table).then((DDOStatement stmt) {
-			Database database = table.getDatabase();
-			DDOResult row;
-			Map<String, ForeignKey> foreignKeys;
 
-			while ((row = stmt.fetch(DDO.FETCH_ASSOC)) != null) {
+		return _getForeignKeyDefinitions(table).then((DDOStatement stmt) {
+			return new Future.sync((){
+				Database database = table.getDatabase();
+				DDOResult row;
+				Map<String, ForeignKey> foreignKeys;
 
-				foreignKeys = new Map<String, ForeignKey>();
-				RegExp regEx = new RegExp(r"CONSTRAINT `([^`]+)` FOREIGN KEY \((.+)\) REFERENCES `([^`]*)` \((.+)\)(.*)");
-				if (regEx.hasMatch(row.row.values.elementAt(1))) {
-					for(Match match in regEx.allMatches(row.row.values.elementAt(1))) {
-						String name = match.group(1);
-						String rawlcol = match.group(2);
-						String ftbl = match.group(3);
-						String rawfcol = match.group(4);
-						String fkey = match.group(5);
-						List<String> lcols = new List<String>();
-						for(String piece in rawlcol.split('`, `')) {
-							lcols.add(piece.replaceAll('`', '').trim());
-						}
+				while ((row = stmt.fetch(DDO.FETCH_ASSOC)) != null) {
 
-						List<String> fcols = new List<String>();
-						for(String piece in rawfcol.split('`, `')) {
-							fcols.add(piece.replaceAll('`', '').trim());
-						}
+					foreignKeys = new Map<String, ForeignKey>();
+					RegExp regEx = new RegExp(r"CONSTRAINT `([^`]+)` FOREIGN KEY \((.+)\) REFERENCES `([^`]*)` \((.+)\)(.*)");
+					if (regEx.hasMatch(row.row.values.elementAt(1))) {
+						for(Match match in regEx.allMatches(row.row.values.elementAt(1))) {
+							String name = match.group(1);
+							String rawlcol = match.group(2);
+							String ftbl = match.group(3);
+							String rawfcol = match.group(4);
+							String fkey = match.group(5);
+							List<String> lcols = new List<String>();
+							for(String piece in rawlcol.split('`, `')) {
+								lcols.add(piece.replaceAll('`', '').trim());
+							}
 
-						Map<String, String> fkactions = {
-							'ON DELETE': ForeignKey.RESTRICT,
-							'ON UPDATE': ForeignKey.RESTRICT,
-						};
+							List<String> fcols = new List<String>();
+							for(String piece in rawfcol.split('`, `')) {
+								fcols.add(piece.replaceAll('`', '').trim());
+							}
 
-						if (fkey != null && fkey.isNotEmpty) {
-							for(String fkaction in fkactions.keys) {
-								String result;
-								RegExp r = new RegExp("${fkaction} (${ForeignKey.CASCADE}|${ForeignKey.SETNULL})");
-								if (r.hasMatch(fkey)) {
-									fkactions[fkaction] = r.firstMatch(fkey).group(1);
+							Map<String, String> fkactions = {
+								'ON DELETE': ForeignKey.RESTRICT,
+								'ON UPDATE': ForeignKey.RESTRICT,
+							};
+
+							if (fkey != null && fkey.isNotEmpty) {
+								for(String fkaction in fkactions.keys) {
+									String result;
+									RegExp r = new RegExp("${fkaction} (${ForeignKey.CASCADE}|${ForeignKey.SETNULL})");
+									if (r.hasMatch(fkey)) {
+										fkactions[fkaction] = r.firstMatch(fkey).group(1);
+									}
 								}
 							}
-						}
 
-						for(String key in fkactions.keys) {
-							String action = fkactions[key];
-							if (action == ForeignKey.RESTRICT) {
-								fkactions[key] = null;
+							for(String key in fkactions.keys) {
+								String action = fkactions[key];
+								if (action == ForeignKey.RESTRICT) {
+									fkactions[key] = null;
+								}
 							}
-						}
 
-						List<Column> localColumns = new List<Column>();
-						List<Column> foreignColumns = new List<Column>();
-						Table foreignTable = database.getTable(ftbl, true);
+							List<Column> localColumns = new List<Column>();
+							List<Column> foreignColumns = new List<Column>();
+							Table foreignTable = database.getTable(ftbl, true);
 
-						for(String fcol in fcols) {
-							foreignColumns.add(foreignTable.getColumn(fcol));
-						}
-						for(String lcol in lcols) {
-							localColumns.add(table.getColumn(lcol));
-						}
+							for(String fcol in fcols) {
+								foreignColumns.add(foreignTable.getColumn(fcol));
+							}
+							for(String lcol in lcols) {
+								localColumns.add(table.getColumn(lcol));
+							}
 
-						if (!foreignKeys.containsKey(name)) {
-							ForeignKey fk = new ForeignKey(name);
-							fk.setForeignTableCommonName(foreignTable.getCommonName());
-							fk.setForeignSchemaName(foreignTable.getSchema());
-							fk.setOnDelete(fkactions['ON DELETE']);
-							fk.setOnUpdate(fkactions['ON UPDATE']);
-							table.addForeignKey(fk);
-							foreignKeys[name] = fk;
-						}
+							if (!foreignKeys.containsKey(name)) {
+								ForeignKey fk = new ForeignKey(name);
+								fk.setForeignTableCommonName(foreignTable.getCommonName());
+								fk.setForeignSchemaName(foreignTable.getSchema());
+								fk.setOnDelete(fkactions['ON DELETE']);
+								fk.setOnUpdate(fkactions['ON UPDATE']);
+								table.addForeignKey(fk);
+								foreignKeys[name] = fk;
+							}
 
-						for (int x = 0; x < localColumns.length; ++x) {
-							foreignKeys[name].addReference(localColumns.elementAt(x), foreignColumns.elementAt(x));
+							for (int x = 0; x < localColumns.length; ++x) {
+								foreignKeys[name].addReference(localColumns.elementAt(x), foreignColumns.elementAt(x));
+							}
 						}
 					}
 				}
-			}
-			c.complete();
+			});
 		});
-		return c.future;
 	}
 
 	Future addIndexes(Table table) {
 
 		return _getIndexDefinitions(table).then((DDOStatement stmt) {
-			Map<String, Index> indexes = new Map<String, Index>();
-			DDOResult row;
+			return new Future.sync((){
+				Map<String, Index> indexes = new Map<String, Index>();
+				DDOResult row;
 
-			while ((row = stmt.fetch(DDO.FETCH_ASSOC)) != null) {
-				String colName = row.row['Column_name'];
-				String name = row.row['Key_name'];
+				while ((row = stmt.fetch(DDO.FETCH_ASSOC)) != null) {
+					String colName = row.row['Column_name'];
+					String name = row.row['Key_name'];
 
-				if (name == 'PRIMARY') {
-					continue;
-				}
-
-				if (!indexes.containsKey(name)) {
-					bool isUnique = row.row['Non_unique'] == 0;
-					if (isUnique) {
-						indexes[name] = new Unique(name);
-					} else {
-						indexes[name] = new Index(name);
+					if (name == 'PRIMARY') {
+						continue;
 					}
-					if (_addVendorInfo) {
-						VendorInfo vi = getNewVendorInfoObject(row.row);
-						indexes[name].addVendorInfo(vi);
-					}
-					table.addIndex(indexes[name]);
-				}
-				indexes[name].addColumn(table.getColumn(colName));
-			}
 
+					if (!indexes.containsKey(name)) {
+						bool isUnique = row.row['Non_unique'] == 0;
+						if (isUnique) {
+							indexes[name] = new Unique(name);
+						} else {
+							indexes[name] = new Index(name);
+						}
+						if (_addVendorInfo) {
+							VendorInfo vi = getNewVendorInfoObject(row.row);
+							indexes[name].addVendorInfo(vi);
+						}
+						table.addIndex(indexes[name]);
+					}
+					indexes[name].addColumn(table.getColumn(colName));
+				}
+			});
 		});
 	}
 
 	Future addPrimaryKey(Table table) {
-		Completer c = new Completer();
-		_getPrimaryKeyDefinitions(table).then((DDOStatement stmt) {
-			DDOResult row;
-			while ((row = stmt.fetch(DDO.FETCH_ASSOC)) != null) {
-				if (row.row['Key_name'] != 'PRIMARY') {
-					continue;
+		return _getPrimaryKeyDefinitions(table).then((DDOStatement stmt) {
+			return new Future.sync(() {
+				DDOResult row;
+				while ((row = stmt.fetch(DDO.FETCH_ASSOC)) != null) {
+					if (row.row['Key_name'] != 'PRIMARY') {
+						continue;
+					}
+					String name = row.row['Column_name'];
+					table.getColumn(name).setPrimaryKey(true);
 				}
-				String name = row.row['Column_name'];
-				table.getColumn(name).setPrimaryKey(true);
-			}
-			c.complete();
-		});
 
-		return c.future;
+			});
+		});
 	}
 
 	Future addTableVendorInfo(Table table) {
-		Completer c = new Completer();
-		_getVendorInfoDefinitions(table).then((DDOStatement stmt) {
-			DDOResult row = stmt.fetch(DDO.FETCH_ASSOC);
-			VendorInfo vi = getNewVendorInfoObject(row.row);
-			table.addVendorInfo(vi);
-			c.complete();
+		return _getVendorInfoDefinitions(table).then((DDOStatement stmt) {
+			return new Future.sync(() {
+				DDOResult row = stmt.fetch(DDO.FETCH_ASSOC);
+				VendorInfo vi = getNewVendorInfoObject(row.row);
+				table.addVendorInfo(vi);
+			});
 		});
-		return c.future;
 	}
 
 	@override
