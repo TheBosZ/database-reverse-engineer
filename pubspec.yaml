@@ -1,5 +1,5 @@
 name: database_reverse_engineer
-version: 0.1.2
+version: 0.1.3
 author: Nathan Kerr <nathankerr@gmail.com>
 description: A port of part of the Propel PHP database library. Can be used to reverse-engineer a database.
 homepage: https://github.com/TheBosZ/database-reverse-engineer

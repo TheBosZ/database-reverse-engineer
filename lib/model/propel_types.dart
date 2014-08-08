@@ -60,9 +60,9 @@ class PropelTypes {
 	static const String SMALLINT_NATIVE_TYPE = "int";
 	static const String INTEGER_NATIVE_TYPE = "int";
 	static const String BIGINT_NATIVE_TYPE = "String";
-	static const String REAL_NATIVE_TYPE = "float";
-	static const String FLOAT_NATIVE_TYPE = "float";
-	static const String DOUBLE_NATIVE_TYPE = "float";
+	static const String REAL_NATIVE_TYPE = "double";
+	static const String FLOAT_NATIVE_TYPE = "double";
+	static const String DOUBLE_NATIVE_TYPE = "double";
 	static const String BINARY_NATIVE_TYPE = "String";
 	static const String VARBINARY_NATIVE_TYPE = "String";
 	static const String LONGVARBINARY_NATIVE_TYPE = "String";
@@ -287,27 +287,27 @@ class PropelTypes {
 	 * Convenience method to indicate whether a passed-in Dart type is a primitive.
 	 *
 	 * @param      string dartType The Dart type to check
-	 * @return     boolean Whether the Dart type is a primitive (string, int, boolean, float)
+	 * @return     boolean Whether the Dart type is a primitive (string, int, boolean)
 	 */
 	static bool isDartPrimitiveType(String dartType) {
-		return ["bool", "int", "double", "float", "String"].contains(dartType);
+		return ["bool", "int", "double", "String"].contains(dartType);
 	}
 
 	/**
 	 * Convenience method to indicate whether a passed-in Dart type is a numeric primitive.
 	 *
 	 * @param      string dartType The Dart type to check
-	 * @return     boolean Whether the Dart type is a primitive (string, int, boolean, float)
+	 * @return     boolean Whether the Dart type is a primitive (string, int, boolean)
 	 */
 	static bool isDartPrimitiveNumericType(String dartType) {
-		return ["bool", "int", "double", "float"].contains(dartType);
+		return ["bool", "int", "double"].contains(dartType);
 	}
 
 	/**
 	 * Convenience method to indicate whether a passed-in Dart type is an object.
 	 *
 	 * @param      string dartType The Dart type to check
-	 * @return     boolean Whether the Dart type is a primitive (string, int, boolean, float)
+	 * @return     boolean Whether the Dart type is a primitive (string, int, boolean)
 	 */
 	static bool isDartObjectType(String dartType) {
 		return (!PropelTypes.isDartPrimitiveType(dartType) && !["resource", "array"].contains(dartType));
