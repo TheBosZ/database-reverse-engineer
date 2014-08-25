@@ -206,11 +206,12 @@ class Database extends ScopedElement {
 
 	@override
 	Object getBuildProperty(String key) {
-		Object config = getGeneratorConfig();
-		if (config != null) {
-			return config.getBuildProperty(key);
-		}
-		return '';
+		throw new UnimplementedError('Not implemented yet, waiting on GeneratorConfig implementation');
+//		Object config = getGeneratorConfig();
+//		if (config != null) {
+//			return config.getBuildProperty(key);
+//		}
+//		return '';
 	}
 
 	Object addBehavior(Object bdata) {

@@ -154,9 +154,9 @@ class ForeignKey extends PropelXmlElement {
 	List<Column> getLocalColumnObjects() {
 		List<Column> cols = new List<Column>();
 		Table table = getTable();
-		_localColumns.forEach((String colName){
+		for(String colName in _localColumns) {
 			cols.add(table.getColumn(colName));
-		});
+		}
 		return cols;
 	}
 

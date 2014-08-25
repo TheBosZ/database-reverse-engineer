@@ -45,11 +45,11 @@ class MysqlPlatform extends DefaultPlatform {
 
 	String getAddTablesDDL(Database database) {
 		String ret = getBeginDDL();
-		database.getTablesForSql().forEach((Table t) {
+		for(Table t in database.getTablesForSql()) {
 			ret = "${ret}${getCommentBlockDDL(t.getName())}";
 			ret = "${ret}${getDropTableDDL(t)}";
 			ret = "${ret}${getAddTableDDL(t)}";
-		});
+		}
 		ret = "${ret}${getEndDDL()}";
 		return ret;
 	}
@@ -61,28 +61,28 @@ class MysqlPlatform extends DefaultPlatform {
 	String getAddTableDDL(Table t) {
 		List<String> lines = new List<String>();
 
-		t.getColumns().forEach((Column column) {
+		for (Column column in t.getColumns()) {
 			lines.add(getColumnDDL(column));
-		});
+		}
 
 		if (t.hasPrimaryKey()) {
 			lines.add(getPrimaryKeyDDL(t));
 		}
 
-		t.getUnices().forEach((Unique unique) {
+		for (Unique unique in t.getUnices()) {
 			lines.add(getUniqueDDL(unique));
-		});
+		}
 
-		t.getIndices().forEach((Index index) {
+		for (Index index in t.getIndices()) {
 			lines.add(getIndexDDL(index));
-		});
+		}
 
-		t.getForeignKeys().forEach((ForeignKey fk) {
+		for (ForeignKey fk in t.getForeignKeys()) {
 			if (fk.isSkipSql()) {
-				return;
+				continue;
 			}
 			lines.add(getForeignKeyDDL(fk));
-		});
+		}
 
 		String mysqlTableType;
 		VendorInfo vi = t.getVendorInfoForType('mysql');
@@ -123,8 +123,8 @@ CREATE TABLE ${quoteIdentifier(t.getName())}
 			'Checksum': 'CHECKSUM',
 			'Pack_Keys': 'PACK_KEYS',
 			'Delay_key_write': 'DELAY_KEY_WRITE',
-		}.forEach((String name, String sqlName){
-			if(vi.hasParameter(name)) {
+		}.forEach((String name, String sqlName) {
+			if (vi.hasParameter(name)) {
 				tableOptions.add("${sqlName}=${quote(vi.getParameter(name))}");
 			}
 		});
@@ -140,27 +140,27 @@ CREATE TABLE ${quoteIdentifier(t.getName())}
 		String defaultSetting = getColumnDefaultValueDDL(col);
 
 		ColumnDefaultValue def = domain.getDefaultValue();
-		switch(sqlType) {
+		switch (sqlType) {
 			case 'DATETIME':
-				if(def != null && def.isExpression()) {
+				if (def != null && def.isExpression()) {
 					sqlType = 'TIMESTAMP';
 				}
 				break;
 			case 'DATE':
-				if(def != null && def.isExpression()) {
+				if (def != null && def.isExpression()) {
 					throw new Exception("DATE columns cannot have default *expressions* in MySQL");
 				}
 				break;
 			case 'TEXT':
 			case 'BLOB':
-				if(def != null) {
+				if (def != null) {
 					throw new Exception("BLOB and TEXT columns cannot have *default* values in MySQL");
 				}
 				break;
 		}
 
 		List<String> ddl = [quoteIdentifier(col.getName())];
-		if(hasSize(sqlType)) {
+		if (hasSize(sqlType)) {
 			ddl.add("${sqlType}${domain.printSize()}");
 		} else {
 			ddl.add(sqlType);
@@ -168,46 +168,46 @@ CREATE TABLE ${quoteIdentifier(t.getName())}
 
 		VendorInfo colInfo = col.getVendorInfoForType(getDatabaseType());
 
-		if(colInfo.hasParameter('Charset')) {
+		if (colInfo.hasParameter('Charset')) {
 			ddl.add("CHARACTER SET ${quote(colInfo.getParameter('Charset'))}");
 		}
 
-		if(colInfo.hasParameter('Collation')){
+		if (colInfo.hasParameter('Collation')) {
 			ddl.add("COLLATE ${quote(colInfo.getParameter('Collation'))}");
-		} else if(colInfo.hasParameter('Collate')) {
+		} else if (colInfo.hasParameter('Collate')) {
 			ddl.add("COLLATE ${quote(colInfo.getParameter('Collate'))}");
 		}
 
-		if(sqlType == 'TIMESTAMP') {
-			if(notNullString.isEmpty) {
+		if (sqlType == 'TIMESTAMP') {
+			if (notNullString.isEmpty) {
 				notNullString = 'NULL';
 			}
 
-			if(defaultSetting.isEmpty && notNullString == 'NOT NULL') {
+			if (defaultSetting.isEmpty && notNullString == 'NOT NULL') {
 				defaultSetting = 'DEFAULT CURRENT_TIMESTAMP';
 			}
-			if(notNullString.isNotEmpty) {
+			if (notNullString.isNotEmpty) {
 				ddl.add(notNullString);
 			}
-			if(defaultSetting.isNotEmpty) {
+			if (defaultSetting.isNotEmpty) {
 				ddl.add(defaultSetting);
 			}
 		} else {
-			if(defaultSetting != null && defaultSetting.isNotEmpty) {
+			if (defaultSetting != null && defaultSetting.isNotEmpty) {
 				ddl.add(defaultSetting);
 			}
 
-			if(notNullString != null) {
+			if (notNullString != null) {
 				ddl.add(notNullString);
 			}
 		}
 
 		String autoIncrement = col.getAutoIncrementString();
-		if(autoIncrement != null && autoIncrement.isNotEmpty) {
+		if (autoIncrement != null && autoIncrement.isNotEmpty) {
 			ddl.add(autoIncrement);
 		}
 
-		if(col.getDescription() != null) {
+		if (col.getDescription() != null) {
 			ddl.add("COMMENT ${quote(col.getDescription())}");
 		}
 		return ddl.join(" ");
@@ -215,46 +215,42 @@ CREATE TABLE ${quoteIdentifier(t.getName())}
 
 	String getIndexColumnListDDL(Index index) {
 		List<String> list = new List<String>();
-		index.getColumns().forEach((Column c){
+		for(Column c in index.getColumns()) {
 			list.add("${quoteIdentifier(c.getName())}${index.hasColumnSize(c.getName()) ? index.getColumnSize(c.getName()) : ''}");
-		});
+		}
 		return list.join(', ');
 	}
 
 	String getDropPrimaryKeyDDL(Table table) => "\nALTER TABLE ${quoteIdentifier(table.getName())} DROP PRIMARY KEY";
 
-	String getAddIndexDDL(Index index) =>
-		"\nCREATE ${getIndexType(index)}INDEX ${quoteIdentifier(index.getName())} ON ${quoteIdentifier(index.getTable().getName())} (${getColumnListDDL(index.getColumns())})\n";
+	String getAddIndexDDL(Index index) => "\nCREATE ${getIndexType(index)}INDEX ${quoteIdentifier(index.getName())} ON ${quoteIdentifier(index.getTable().getName())} (${getColumnListDDL(index.getColumns())})\n";
 
-	String getDropIndexDDL(Index index) =>
-		"\nDROP INDEX ${quoteIdentifier(index.getName())} on ${quoteIdentifier(index.getTable().getName())}\n";
+	String getDropIndexDDL(Index index) => "\nDROP INDEX ${quoteIdentifier(index.getName())} on ${quoteIdentifier(index.getTable().getName())}\n";
 
-	String getIndexDDL(Index index) =>
-		"${getIndexType(index)}INDEX ${quoteIdentifier(index.getName())} (${getIndexColumnListDDL(index)})";
+	String getIndexDDL(Index index) => "${getIndexType(index)}INDEX ${quoteIdentifier(index.getName())} (${getIndexColumnListDDL(index)})";
 
 	String getIndexType(Index index) {
 		String type = '';
 		VendorInfo vi = index.getVendorInfoForType(getDatabaseType());
-		if(vi != null && vi.hasParameter('Index_type')) {
+		if (vi != null && vi.hasParameter('Index_type')) {
 			type = "${vi.getParameter('Index_type')} ";
-		} else if(index.isUnique()) {
+		} else if (index.isUnique()) {
 			type = 'UNIQUE ';
 		}
 		return type;
 	}
 
-	String getUniqueDDL(Unique unique) =>
-		"UNIQUE INDEX ${quoteIdentifier(unique.getName())} (${getIndexColumnListDDL(unique)})";
+	String getUniqueDDL(Unique unique) => "UNIQUE INDEX ${quoteIdentifier(unique.getName())} (${getIndexColumnListDDL(unique)})";
 
-	String getDropForeignKeyDDL(ForeignKey fk){
-		if(fk.isSkipSql()) {
+	String getDropForeignKeyDDL(ForeignKey fk) {
+		if (fk.isSkipSql()) {
 			return '';
 		}
 		return "\nALTER TABLE ${quoteIdentifier(fk.getTable().getName())} DROP FOREIGN KEY ${fk.getName()}\n";
 	}
 
 	String getForeignKeyDDL(ForeignKey fk) {
-		if(fk.isSkipSql()) {
+		if (fk.isSkipSql()) {
 			return '';
 		}
 		StringBuffer sb = new StringBuffer("CONSTRAINT ");
@@ -266,11 +262,11 @@ CREATE TABLE ${quoteIdentifier(t.getName())}
 		sb.write(" (");
 		sb.write(getColumnListDDL(fk.getForeignColumnObjects()));
 		sb.write(")");
-		if(fk.hasOnUpdate()) {
+		if (fk.hasOnUpdate()) {
 			sb.write("\nON UPDATE ");
 			sb.write(fk.getOnUpdate());
 		}
-		if(fk.hasOnDelete()) {
+		if (fk.hasOnDelete()) {
 			sb.write("\nON DELETE ");
 			sb.write(fk.getOnDelete());
 		}
@@ -292,31 +288,25 @@ CREATE TABLE ${quoteIdentifier(t.getName())}
 	}
 	*/
 
-	String getRenameTableDDL(String fromTableName, String toTableName) =>
-		"\nRENAME TABLE ${quoteIdentifier(fromTableName)} TO ${quoteIdentifier(toTableName)};\n";
+	String getRenameTableDDL(String fromTableName, String toTableName) => "\nRENAME TABLE ${quoteIdentifier(fromTableName)} TO ${quoteIdentifier(toTableName)};\n";
 
-	String getRemoveColumnDDL(Column column) =>
-		"\nALTER TABLE ${quoteIdentifier(column.getTable().getName())} DROP ${quoteIdentifier(column.getName())}\n";
+	String getRemoveColumnDDL(Column column) => "\nALTER TABLE ${quoteIdentifier(column.getTable().getName())} DROP ${quoteIdentifier(column.getName())}\n";
 
 	String getRenameColumnDDL(Column from, Column to) => getChangeColumnDDL(from, to);
 
 	String getModifyColumnDDL(PropelColumnDiff columnDiff) => getChangeColumnDDL(columnDiff.getFromColumn(), columnDiff.getToColumn());
 
-	String getChangeColumnDDL(Column from, Column to) =>
-		"\nALTER TABLE ${quoteIdentifier(from.getTable().getName())} CHANGE ${quoteIdentifier(from.getName())} ${getColumnDDL(to)};\n";
+	String getChangeColumnDDL(Column from, Column to) => "\nALTER TABLE ${quoteIdentifier(from.getTable().getName())} CHANGE ${quoteIdentifier(from.getName())} ${getColumnDDL(to)};\n";
 
-	String getModifyColumnsDDL(List<PropelColumnDiff> columnDiffs) =>
-		columnDiffs.map((PropelColumnDiff cd) => getModifyColumnDDL(cd)).toList().join();
+	String getModifyColumnsDDL(List<PropelColumnDiff> columnDiffs) => columnDiffs.map((PropelColumnDiff cd) => getModifyColumnDDL(cd)).toList().join();
 
 	bool supportsSchema() => true;
 
-	bool hasSize(String sqlType) =>
-		!(['MEDIUMTEXT', 'LONGTEXT', 'BLOB', 'MEDIUMBLOB', 'LONGBLOB'].contains(sqlType));
+	bool hasSize(String sqlType) => !(['MEDIUMTEXT', 'LONGTEXT', 'BLOB', 'MEDIUMBLOB', 'LONGBLOB'].contains(sqlType));
 
 	String disconnectedEscapeText(String text) => addSlashes(text);
 
-	String quoteIdentifier(String text) =>
-		_isIdentifierQuotingEnabled ? "`${text.replaceAll(".", "`.`")}" : text;
+	String quoteIdentifier(String text) => _isIdentifierQuotingEnabled ? "`${text.replaceAll(".", "`.`")}" : text;
 
 	String getTimeStampFormatter() => 'Y-m-d H:i:s';
 }

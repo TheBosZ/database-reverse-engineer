@@ -38,5 +38,6 @@ part 'reverse/mysql/mysql_schema_parser.dart';
 part 'platform/propel_platform_interface.dart';
 part 'platform/default_platform.dart';
 part 'platform/mysql_platform.dart';
+part 'platform/pgsql_platform.dart';
 
 part 'helpers.dart';
