@@ -46,7 +46,7 @@ class MysqlSchemaParser extends BaseSchemaParser {
 		'decimal': 10,
 	};
 
-	MysqlSchemaParser(DDO dbh): super(dbh);
+	MysqlSchemaParser(DDO dbh) : super(dbh);
 
 	Map<String, String> getTypeMapping() {
 		return MysqlSchemaParser._mysqlTypeMap;
@@ -54,8 +54,7 @@ class MysqlSchemaParser extends BaseSchemaParser {
 
 	@override
 	Future<int> parse(Database database, [Object task = null]) {
-		Completer c = new Completer();
-		_dbh.query('SHOW TABLES').then((DDOStatement stmt) {
+		return _dbh.query('SHOW TABLES').then((DDOStatement stmt) {
 			DDOResult row;
 			List<Table> tables = new List<Table>();
 			while ((row = stmt.fetch(DDO.FETCH_ASSOC)) != null) {
@@ -68,23 +67,22 @@ class MysqlSchemaParser extends BaseSchemaParser {
 				tables.add(table);
 			}
 
-			Future.wait(tables.map((Table t) => _addColumns(t))).then((_) {
-				Future.wait(tables.map((Table t) => addForeignKeys(t))).then((_){
-					Future.wait(tables.map((Table t) => addIndexes(t))).then((_){
-						Future.wait(tables.map((Table t) => addPrimaryKey(t))).then((_){
-							if(_addVendorInfo) {
-								Future.wait(tables.map((Table t) => addTableVendorInfo(t))).then((_){
-									c.complete(tables.length);
+			return Future.wait(tables.map((Table t) => _addColumns(t))).then((_) {
+				Future.wait(tables.map((Table t) => addForeignKeys(t))).then((_) {
+					Future.wait(tables.map((Table t) => addIndexes(t))).then((_) {
+						Future.wait(tables.map((Table t) => addPrimaryKey(t))).then((_) {
+							if (_addVendorInfo) {
+								Future.wait(tables.map((Table t) => addTableVendorInfo(t))).then((_) {
+									return tables.length;
 								});
 							} else {
-								c.complete(tables.length);
+								return tables.length;
 							}
 						});
 					});
 				});
 			});
 		});
-		return c.future;
 	}
 
 	Future<DDOStatement> _getColumnDefinitions(Table table) => _dbh.query("SHOW COLUMNS FROM `${table.getName()}`");
@@ -98,18 +96,18 @@ class MysqlSchemaParser extends BaseSchemaParser {
 	Future<DDOStatement> _getVendorInfoDefinitions(Table table) => _dbh.query("SHOW TABLE STATUS LIKE '${table.getName()}'");
 
 	Future<DDOStatement> _getColumnComment(Column column) => _dbh.query(''' 
-    			SELECT
-    			COLUMN_COMMENT
-    			FROM information_schema.COLUMNS
-    			WHERE TABLE_NAME='${column.getTable().getName()}'
-    				AND TABLE_SCHEMA='${column.getTable().getDatabase().getName()}'
-    				AND COLUMN_NAME='${column.getName()}' LIMIT 1
+SELECT
+COLUMN_COMMENT
+FROM information_schema.COLUMNS
+WHERE TABLE_NAME='${column.getTable().getName()}'
+	AND TABLE_SCHEMA='${column.getTable().getDatabase().getName()}'
+	AND COLUMN_NAME='${column.getName()}' LIMIT 1
     ''');
 
 	Future _addColumns(Table table) {
 		String databaseName = table.getDatabase().getName();
 
-		 return _getColumnDefinitions(table).then((DDOStatement stmt) {
+		return _getColumnDefinitions(table).then((DDOStatement stmt) {
 			return new Future.sync(() {
 				Map<String, String> row;
 				DDOResult r;
@@ -135,7 +133,7 @@ class MysqlSchemaParser extends BaseSchemaParser {
 								size = s != null && s.isNotEmpty ? int.parse(s) : null;
 							}
 						}
-						for(String k in _defaultTypeSizes.keys) {
+						for (String k in _defaultTypeSizes.keys) {
 							int v = _defaultTypeSizes[k];
 							if (nativeType == k && size == v) {
 								size = null;
@@ -189,7 +187,7 @@ class MysqlSchemaParser extends BaseSchemaParser {
 					}
 					table.addColumn(column);
 					//Future t = _getColumnComment(column).then((DDOStatement comState) {
-						//row['Comment'] = comState.fetchColumn();
+					//row['Comment'] = comState.fetchColumn();
 
 					//});
 				}
@@ -200,7 +198,7 @@ class MysqlSchemaParser extends BaseSchemaParser {
 	Future addForeignKeys(Table table) {
 
 		return _getForeignKeyDefinitions(table).then((DDOStatement stmt) {
-			return new Future.sync((){
+			return new Future.sync(() {
 				Database database = table.getDatabase();
 				DDOResult row;
 				Map<String, ForeignKey> foreignKeys;
@@ -210,19 +208,19 @@ class MysqlSchemaParser extends BaseSchemaParser {
 					foreignKeys = new Map<String, ForeignKey>();
 					RegExp regEx = new RegExp(r"CONSTRAINT `([^`]+)` FOREIGN KEY \((.+)\) REFERENCES `([^`]*)` \((.+)\)(.*)");
 					if (regEx.hasMatch(row.row.values.elementAt(1))) {
-						for(Match match in regEx.allMatches(row.row.values.elementAt(1))) {
+						for (Match match in regEx.allMatches(row.row.values.elementAt(1))) {
 							String name = match.group(1);
 							String rawlcol = match.group(2);
 							String ftbl = match.group(3);
 							String rawfcol = match.group(4);
 							String fkey = match.group(5);
 							List<String> lcols = new List<String>();
-							for(String piece in rawlcol.split('`, `')) {
+							for (String piece in rawlcol.split('`, `')) {
 								lcols.add(piece.replaceAll('`', '').trim());
 							}
 
 							List<String> fcols = new List<String>();
-							for(String piece in rawfcol.split('`, `')) {
+							for (String piece in rawfcol.split('`, `')) {
 								fcols.add(piece.replaceAll('`', '').trim());
 							}
 
@@ -232,7 +230,7 @@ class MysqlSchemaParser extends BaseSchemaParser {
 							};
 
 							if (fkey != null && fkey.isNotEmpty) {
-								for(String fkaction in fkactions.keys) {
+								for (String fkaction in fkactions.keys) {
 									String result;
 									RegExp r = new RegExp("${fkaction} (${ForeignKey.CASCADE}|${ForeignKey.SETNULL})");
 									if (r.hasMatch(fkey)) {
@@ -241,7 +239,7 @@ class MysqlSchemaParser extends BaseSchemaParser {
 								}
 							}
 
-							for(String key in fkactions.keys) {
+							for (String key in fkactions.keys) {
 								String action = fkactions[key];
 								if (action == ForeignKey.RESTRICT) {
 									fkactions[key] = null;
@@ -252,10 +250,10 @@ class MysqlSchemaParser extends BaseSchemaParser {
 							List<Column> foreignColumns = new List<Column>();
 							Table foreignTable = database.getTable(ftbl, true);
 
-							for(String fcol in fcols) {
+							for (String fcol in fcols) {
 								foreignColumns.add(foreignTable.getColumn(fcol));
 							}
-							for(String lcol in lcols) {
+							for (String lcol in lcols) {
 								localColumns.add(table.getColumn(lcol));
 							}
 
@@ -282,7 +280,7 @@ class MysqlSchemaParser extends BaseSchemaParser {
 	Future addIndexes(Table table) {
 
 		return _getIndexDefinitions(table).then((DDOStatement stmt) {
-			return new Future.sync((){
+			return new Future.sync(() {
 				Map<String, Index> indexes = new Map<String, Index>();
 				DDOResult row;
 
