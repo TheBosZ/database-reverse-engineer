@@ -4,7 +4,8 @@ author: Nathan Kerr <nathankerr@gmail.com>
 description: A port of part of the Propel PHP database library. Can be used to reverse-engineer a database.
 homepage: https://github.com/TheBosZ/database-reverse-engineer
 dependencies:
-  ddo: '>=0.2.3 <0.3.0'
+  ddo:
+    path: '../pdodart'
   xml: '>=1.0.0 <2.0.0'
 dev_dependencies:
-  unittest: any
+  test: any
